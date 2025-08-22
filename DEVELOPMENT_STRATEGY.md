@@ -658,3 +658,171 @@ This comprehensive development strategy provides a structured approach to implem
 - **Risk Management**: Proactive identification and mitigation of potential issues
 
 The proposed timeline of 24 weeks provides adequate time for thorough development, testing, and deployment while maintaining quality standards and risk mitigation strategies.
+
+---
+
+## 9. Repository Documentation Standards & Audit Model
+
+Every repository MUST include the following documentation and auditing structure to ensure traceability, quality, and operational readiness.
+
+- docs/
+  - OVERVIEW.md (role in system, boundaries, upstream/downstream deps)
+  - ARCHITECTURE.md (components, sequence/flow diagrams, data model)
+  - API_CONTRACT.md (endpoints, events, schemas, error model)
+  - OPERATIONS.md (runbook, SLOs/SLIs, on-call playbooks, health checks)
+  - SECURITY.md (threat model, authZ matrix, secrets policy, data classification)
+  - MAINTENANCE.md (patch cadence, dependency policy, upgrade notes)
+  - ADR/0001-record.md (Architectural Decision Records; one ADR per decision)
+- audit/
+  - agent-progress/YYYY/WW-week.md (daily progress logs auto-compiled from commits)
+  - completed-tasks/ (one file per task with acceptance evidence: screenshots, test links)
+  - code-quality/
+    - coverage-reports/
+    - static-analysis/ (linters, SAST)
+    - performance-benchmarks/
+    - security-scans/
+  - releases/
+    - release-readiness-checklist.md
+    - rollback-verification.md
+- .github/
+  - PULL_REQUEST_TEMPLATE.md (checklist: tests, docs, security, perf, ADR link)
+  - ISSUE_TEMPLATE.md
+  - workflows/
+    - ci.yml (lint, test, build, coverage gate)
+    - security.yml (dependency scan + secret scan)
+    - quality.yml (format, static analysis)
+- CODEOWNERS (explicit owners by path)
+- CONTRIBUTING.md (branching policy and commit conventions)
+
+Branching & release policy
+- Trunk-based development with short-lived feature branches
+- Semantic versioning tags per repo; release branches only when necessary
+- Mandatory code reviews (2 reviewers for critical paths), green CI, and ADR link in PR
+
+Acceptance gates
+- Test coverage gate ≥85% for critical paths
+- No critical vulnerabilities in dependency and SAST scans
+- Performance guardrails validated (defined per repo in OPERATIONS.md)
+
+## 10. Interdependency Matrix & Rationale
+
+Interdependencies (summary)
+- cflex-core-platform: orchestrates business flows; depends on cflex-storage-manager, cflex-file-processor, cflex-whatsapp-proxy; integrates with cflex-rise-customizations (or hybrid core per ADR-0002); publishes metrics/logs to cflex-monitoring-system; deployed via cflex-infrastructure.
+- cflex-rise-customizations: exposes REST/JSON APIs consumed by core-platform; writes to MySQL; emits domain events.
+- cflex-file-processor: pulled by core-platform via queue; depends on storage-manager; emits processing metrics.
+- cflex-storage-manager: provides unified storage SDK (VPS hot, cPanel SFTP cold); exposes signed URL service.
+- cflex-whatsapp-proxy: message relay; consumes events from core; fallbacks to email.
+- cflex-bagisto-sync: optional e-com sync; consumes from/to core and Rise.
+- cflex-monitoring-system: collects exporters’ metrics and logs; provides dashboards/alerts consumed by all teams.
+- cflex-infrastructure: IaC and pipelines to deploy all services and monitoring.
+
+Why exactly eight repositories
+- Separation of concerns aligned to deployment units and failure domains
+- Minimizes blast radius: communication failure does not block file processing, etc.
+- Mirrors team responsibilities (agents) and allows independent release cadences
+- Reflects hosting constraints (cPanel storage is not a compute node) and facilitates alternate backends (S3 later) without code churn
+
+## 11. Decision Rationale (Step-by-step) and ADR Index
+
+This section records the reasoning behind key architectural decisions. Each item MUST be mirrored as an ADR under docs/ADR in the relevant repo.
+
+D1. Platform composition (Rise-only vs Hybrid with Ever-Gauzy + Bagisto)
+- Constraints: VPS 4vCPU/6GB; cPanel cannot run daemons; SRS favors single-domain Rise; PRD v2 proposes Gauzy+Bagisto with subdomains.
+- Alternatives considered: (A) Rise-only with enhanced Store; (B) Hybrid Gauzy+Bagisto with sync; (C) Gauzy-only custom store.
+- Decision (Phase 0 Gate): Default to SRS (A, Rise-only) for reduced operational complexity; keep (B) as contingency if Store gaps are material.
+- Justification: Lower resource footprint, single data model, simpler auth/session; aligns with CUSTOMIZATION-STRATEGY.md and SRS scope; hybrid adds integration risk.
+- Follow-ups: Spike to validate Store module coverage vs PRD features; re-evaluate at week 4 milestone.
+
+D2. Storage strategy (VPS hot + cPanel cold via SFTP)
+- Constraints: cPanel cannot host long-running workers; 1.5 TB capacity available; large file workflows.
+- Alternatives: (A) SFTP tiering to cPanel; (B) MinIO on VPS; (C) Cloud object storage.
+- Decision: (A) now; (B) optional later for S3 semantics.
+- Justification: Meets capacity and cost now; asynchronous mover mitigates latency.
+
+D3. File processing (libvips/Sharp primary; ImageMagick fallback)
+- Constraints: 500 MB files; memory pressure on VPS.
+- Decision: Sharp/libvips primary for speed/memory; fallback to ImageMagick for edge formats.
+- Justification: Meets PRD NFRs for preview latency and resource use.
+
+D4. Observability stack (Prometheus + Grafana + Loki + Uptime-Kuma)
+- Constraints: VPS resources; cPanel limitations.
+- Decision: Use lightweight metrics (Prometheus/node_exporter) and Loki for logs; avoid ELK on primary VPS; Uptime-Kuma for external checks.
+- Justification: Lower footprint, simpler ops; still meets PRD 12.5/4. NFR observability.
+
+D5. Communication (WhatsApp via Baileys proxy + email fallback)
+- Risk: instability, potential bans.
+- Decision: Proceed with proxy but enforce queueing, retries, and strict fallback to email; monitor error rates and session health.
+
+D6. Deployment (GitHub Actions + zero-downtime playbooks)
+- Decision: Blue/green or rolling, depending on service; strict pre-deploy checks (migrations dry-run, health checks); auto-rollback.
+
+D7. Security posture
+- TLS everywhere, HSTS, RBAC least privilege, ClamAV on upload, signed URLs per file, rate limiting and WAF; secrets via environment vault on VPS.
+
+## 12. Maintenance Procedures & Ops Runbooks
+
+Patching cadence
+- App repos: weekly dependency review; monthly minor updates; urgent security patches immediately
+- OS & middleware: monthly patch window with maintenance notice
+
+Database hygiene (MySQL)
+- Slow query review weekly; index audit monthly; backup verification weekly (checksum + restore test)
+- Connection limits and pool tuning recorded in OPERATIONS.md
+
+Secrets & certificates
+- Rotate API keys quarterly; Let’s Encrypt auto-renew with monitor; revoke on incident
+
+Log rotation & retention
+- Application logs: 30 days (debug), 90 days (info/error); audit logs: 7 years
+- Metrics retention: 15 days high-resolution, 1 year downsampled
+
+On-call playbooks
+- Standardized runbooks in each repo’s OPERATIONS.md: incident triage, rollback, and escalation matrix
+
+## 13. Disaster Recovery (DR) Plan
+
+Objectives
+- RTO: 4 hours; RPO: 24 hours (DB binlog every 15 minutes when feasible per PRD v2)
+
+Backups
+- DB: nightly full + 15-min binlogs to bck.* subdomain; 4-week rotation
+- Files: VPS hot previews daily to cPanel snapshot; weekly archives; quarterly cold archival as needed
+
+Drills & validation
+- Quarterly restore drills (DB + representative files)
+- Automated backup integrity checks (hash compare) logged in monitoring dashboard
+
+Recovery steps
+1) Rehydrate DB from latest full + binlogs
+2) Restore service configs from IaC repo
+3) Restore critical files (previews first) while cold assets sync in background
+
+## 14. Detailed Timeline Dependencies & Contingencies
+
+Key dependencies
+- WhatsApp proxy readiness blocks customer notifications; contingency: force email-only templates
+- cPanel SFTP throughput impacts file mover; contingency: throttle preview generation and extend hot cache window
+- Store module gaps risk Rise-only plan; contingency: activate cflex-bagisto-sync and minimal Bagisto storefront
+
+Contingency triggers and actions
+- If preview P95 > 60s for 50 MB after optimization → add a second worker and reduce concurrency per worker
+- If queue depth > threshold for 30 min → autoscale worker count (within VPS headroom) and alert
+- If WhatsApp proxy error rate > 10% over 5 min → switch channel order to email-first
+
+## 15. Agent Allocation Framework Summary
+
+- Roles and metrics as defined in AGENT_TASK_TEMPLATES.md
+- RACI per repo
+  - Code ownership documented in CODEOWNERS
+  - Integration changes require sign-off from both owning repos
+- Acceptance of deliverables
+  - Must include updated docs, ADR link, tests, and audit evidence in audit/completed-tasks
+
+## 16. Alignment with PRD/SRS and Open Items
+
+- See ALIGNMENT_AND_GAPS.md for a line-by-line mapping to:
+  - PRD/consolidate v2.md
+  - PRD/consolidate v3.md
+  - PRD/CUSTOMIZATION-STRATEGY.md
+  - PRD/SOFTWARE_SPECIFICATION.md
+- Open conflicts: store architecture, NFR thresholds (2s vs 3s), hosting scope (VPS vs cPanel only). Decision gates documented in ADRs and Timeline.
