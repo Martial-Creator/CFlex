@@ -1,0 +1,536 @@
+task_id: "T-002-API-FOUNDATION"
+agent: "agent-2-backend-api"
+priority: "critical"
+estimated_hours: 32
+status: "waiting"
+dependencies: ["T-001-DB-FOUNDATION"]
+created_at: "2025-08-23T16:08:53Z"
+due_date: "2025-08-28T18:00:00Z"
+
+objective: |
+  Create comprehensive REST API foundation for CFlex multi-tenant platform supporting
+  subdomain-based architecture (clients/staff/admin) with modern API patterns from
+  Twenty, ERPNext, Ever-Gauzy, Odoo, NocoBase, and Akaunting.
+
+context:
+  subdomain_architecture: "../../SUBDOMAIN_ARCHITECTURE.md"
+  database_schema: "../../agents/agent-1-database/artifacts/docs/schema_design_comprehensive.md"
+  github_references:
+    - "https://github.com/twentyhq/twenty" # GraphQL-first, TypeScript APIs
+    - "https://github.com/frappe/erpnext" # Frappe framework API patterns
+    - "https://github.com/ever-co/ever-gauzy" # NestJS multi-tenant APIs
+    - "https://github.com/odoo/odoo" # XML-RPC + JSON-RPC APIs
+    - "https://github.com/nocobase/nocobase" # Plugin-based API architecture
+    - "https://github.com/akaunting/akaunting" # Laravel API patterns
+  rise_crm_base: "3.9.3 - extend without modifying core"
+  target_subdomains:
+    - "clients.caldronflex.com.np" # Customer-facing APIs
+    - "staff.caldronflex.com.np" # Staff operational APIs  
+    - "admin.caldronflex.com.np" # Admin management APIs
+
+requirements:
+  core_requirements:
+    - Multi-tenant aware API endpoints with subdomain context
+    - RESTful design with consistent response formats
+    - JWT authentication with subdomain-specific permissions
+    - Rate limiting and API security hardening
+    - OpenAPI/Swagger documentation
+    - Response time <200ms P95 for standard operations
+    - Support for 30 concurrent users per subdomain
+    - Comprehensive error handling and logging
+  
+  reference_architecture:
+    - Twenty GraphQL schema patterns adapted to REST
+    - ERPNext Frappe framework API structure
+    - Ever-Gauzy multi-tenant service architecture
+    - Odoo web controllers and RPC patterns
+    - NocoBase plugin-based endpoint organization
+    - Akaunting Laravel resource controllers
+
+sub_tasks:
+
+  # Sub-task 1: API Infrastructure and Authentication
+  ST-001:
+    title: "API Infrastructure and Multi-Tenant Authentication"
+    estimated_hours: 6
+    description: |
+      Create foundational API infrastructure with multi-tenant authentication
+      based on Ever-Gauzy patterns and JWT best practices.
+    
+    deliverables:
+      - "artifacts/api/middleware/tenant_middleware.js"
+      - "artifacts/api/middleware/auth_middleware.js"
+      - "artifacts/api/middleware/rate_limit_middleware.js"
+      - "artifacts/api/config/swagger_config.js"
+    
+    implementation_details:
+      authentication_system:
+        - "JWT tokens with subdomain context"
+        - "Role-based permissions per subdomain"
+        - "Refresh token mechanism"
+        - "Session management integration with Rise CRM"
+      
+      tenant_resolution:
+        description: "Subdomain-based tenant identification"
+        middleware: |
+          // Tenant Resolution Middleware (inspired by Ever-Gauzy)
+          const resolveTenant = (req, res, next) => {
+            const subdomain = req.get('host').split('.')[0];
+            const tenantMap = {
+              'clients': { type: 'client', context: 'customer' },
+              'staff': { type: 'internal', context: 'operations' },
+              'admin': { type: 'internal', context: 'administration' }
+            };
+            
+            req.tenant = tenantMap[subdomain] || { type: 'public', context: 'anonymous' };
+            req.tenantId = await getTenantId(subdomain);
+            next();
+          };
+      
+      rate_limiting:
+        - "100 requests/minute per user for standard endpoints"
+        - "500 requests/minute for staff subdomain"
+        - "Unlimited for admin subdomain with IP whitelist"
+        - "Burst handling for file uploads"
+    
+    acceptance_criteria:
+      - "JWT authentication working across all subdomains"
+      - "Tenant context properly injected in all requests"
+      - "Rate limiting enforced per subdomain type"
+      - "OpenAPI documentation auto-generated"
+      - "Response time <50ms for authentication middleware"
+
+  # Sub-task 2: Core Business Entity APIs (Based on ERPNext patterns)
+  ST-002:
+    title: "Core Business Entity REST APIs"
+    estimated_hours: 8
+    description: |
+      Create comprehensive REST APIs for core business entities following
+      ERPNext DocType patterns and Odoo web controller structure.
+    
+    deliverables:
+      - "artifacts/api/controllers/projects_controller.js"
+      - "artifacts/api/controllers/orders_controller.js"
+      - "artifacts/api/controllers/tasks_controller.js"
+      - "artifacts/api/services/business_logic_service.js"
+      - "artifacts/api/models/entity_models.js"
+    
+    api_endpoints:
+      projects_api:
+        base_path: "/api/v1/projects"
+        endpoints:
+          - "GET /projects - List projects with tenant filtering"
+          - "GET /projects/{id} - Get project details"
+          - "POST /projects - Create new project"
+          - "PUT /projects/{id} - Update project"
+          - "DELETE /projects/{id} - Soft delete project"
+          - "GET /projects/{id}/orders - List project orders"
+          - "POST /projects/{id}/orders - Create order in project"
+        
+        tenant_filtering:
+          clients: "Only projects where client_id matches authenticated user's client"
+          staff: "All active projects with staff-relevant data"
+          admin: "All projects with full administrative data"
+      
+      orders_api:
+        base_path: "/api/v1/orders"
+        endpoints:
+          - "GET /orders - List orders with status filtering"
+          - "GET /orders/{id} - Get order details with files"
+          - "POST /orders - Create new order"
+          - "PUT /orders/{id} - Update order (with workflow validation)"
+          - "POST /orders/{id}/claim - Staff claims order"
+          - "POST /orders/{id}/status - Update order status"
+          - "POST /orders/{id}/approve - Client approves design"
+          - "POST /orders/{id}/request-changes - Request design changes"
+        
+        workflow_validation:
+          - "Status transitions follow defined workflow"
+          - "Role-based action permissions"
+          - "Audit trail creation for all changes"
+          - "Notification triggers for status changes"
+      
+      tasks_api:
+        base_path: "/api/v1/tasks"
+        endpoints:
+          - "GET /tasks - Task queue with priority ordering"
+          - "GET /tasks/{id} - Task details"
+          - "POST /tasks/{id}/claim - Staff claims task"
+          - "POST /tasks/{id}/complete - Mark task complete"
+          - "POST /tasks/{id}/block - Block task with reason"
+          - "GET /tasks/queue - Available tasks for current user"
+    
+    business_logic_patterns:
+      pricing_engine:
+        description: "Dynamic pricing calculation service"
+        implementation: |
+          class PricingEngine {
+            calculateOrderPrice(orderData, tenant) {
+              const basePrice = this.getBasePrice(orderData.productType);
+              const dimensionCost = this.calculateDimensionCost(orderData.dimensions);
+              const variantModifiers = this.applyVariantModifiers(orderData.variants);
+              const discounts = this.applyDiscounts(orderData, tenant);
+              
+              return {
+                basePrice,
+                dimensionCost,
+                variantModifiers,
+                discounts,
+                totalPrice: basePrice + dimensionCost + variantModifiers - discounts
+              };
+            }
+          }
+      
+      workflow_engine:
+        description: "Order workflow state management"
+        implementation: |
+          class WorkflowEngine {
+            validateTransition(fromStatus, toStatus, userRole) {
+              const allowedTransitions = this.getTransitionMatrix();
+              return allowedTransitions[fromStatus]?.[toStatus]?.includes(userRole);
+            }
+            
+            executeTransition(orderId, fromStatus, toStatus, userId, reason) {
+              // Update order status
+              // Create audit entry
+              // Trigger notifications
+              // Update task assignments
+            }
+          }
+    
+    acceptance_criteria:
+      - "All CRUD operations working for core entities"
+      - "Tenant-aware data filtering implemented"
+      - "Workflow validation enforced"
+      - "Pricing calculations accurate"
+      - "API response times <200ms P95"
+      - "Comprehensive error handling"
+
+  # Sub-task 3: File Management APIs (Integration with Agent-3)
+  ST-003:
+    title: "File Management and Upload APIs"
+    estimated_hours: 6
+    description: |
+      Create file management APIs that integrate with Agent-3's file processing
+      system, supporting large uploads and multi-tenant file access.
+    
+    deliverables:
+      - "artifacts/api/controllers/files_controller.js"
+      - "artifacts/api/middleware/upload_middleware.js"
+      - "artifacts/api/services/file_service.js"
+      - "artifacts/api/controllers/annotations_controller.js"
+    
+    file_upload_system:
+      chunked_upload:
+        description: "Support for large file uploads up to 500MB"
+        implementation: |
+          // Chunked upload endpoint
+          POST /api/v1/files/upload/chunk
+          {
+            "chunkIndex": 0,
+            "totalChunks": 10,
+            "fileId": "temp_file_123",
+            "chunk": "base64_encoded_data"
+          }
+          
+          // Complete upload endpoint
+          POST /api/v1/files/upload/complete
+          {
+            "fileId": "temp_file_123",
+            "orderId": 456,
+            "fileType": "design",
+            "originalName": "design.psd"
+          }
+      
+      file_endpoints:
+        - "POST /files/upload/start - Initialize upload session"
+        - "POST /files/upload/chunk - Upload file chunk"
+        - "POST /files/upload/complete - Finalize upload"
+        - "GET /files/{id} - Get file metadata"
+        - "GET /files/{id}/download - Download file (signed URL)"
+        - "GET /files/{id}/preview - Get preview image"
+        - "DELETE /files/{id} - Soft delete file"
+        - "POST /files/{id}/move-tier - Move to different storage tier"
+      
+      annotation_system:
+        - "GET /files/{id}/annotations - List annotations"
+        - "POST /files/{id}/annotations - Create annotation"
+        - "PUT /annotations/{id} - Update annotation"
+        - "DELETE /annotations/{id} - Delete annotation"
+        - "POST /annotations/{id}/reply - Reply to annotation"
+    
+    security_measures:
+      - "Virus scanning integration with ClamAV"
+      - "File type validation and restrictions"
+      - "Signed URLs for secure file access"
+      - "Tenant-based file access controls"
+      - "Upload rate limiting"
+    
+    acceptance_criteria:
+      - "Large file uploads (500MB) working reliably"
+      - "File processing integration with Agent-3 working"
+      - "Annotation system functional"
+      - "Security measures implemented"
+      - "Performance optimized for concurrent uploads"
+
+  # Sub-task 4: Communication Integration APIs
+  ST-004:
+    title: "Communication and Notification APIs"
+    estimated_hours: 4
+    description: |
+      Create APIs for communication management, integrating with WhatsApp proxy
+      and email systems, with template management and delivery tracking.
+    
+    deliverables:
+      - "artifacts/api/controllers/notifications_controller.js"
+      - "artifacts/api/controllers/messages_controller.js"
+      - "artifacts/api/services/communication_service.js"
+      - "artifacts/api/models/message_templates.js"
+    
+    communication_endpoints:
+      notifications:
+        - "GET /notifications - List user notifications"
+        - "POST /notifications - Create notification"
+        - "PUT /notifications/{id}/read - Mark as read"
+        - "POST /notifications/batch - Batch notifications"
+        - "GET /notifications/templates - List templates"
+        - "POST /notifications/templates - Create template"
+      
+      messages:
+        - "GET /messages - Message history"
+        - "POST /messages/send - Send message"
+        - "GET /messages/{id}/status - Delivery status"
+        - "POST /messages/webhook - Webhook for status updates"
+    
+    message_templates:
+      template_types:
+        - "order_created"
+        - "status_updated"
+        - "design_ready"
+        - "approval_required"
+        - "payment_reminder"
+        - "order_completed"
+      
+      template_structure:
+        bilingual_support: "English and Nepali templates"
+        variables: "Dynamic content insertion"
+        channels: "WhatsApp, Email, SMS fallback"
+    
+    acceptance_criteria:
+      - "Message delivery across multiple channels working"
+      - "Template management system functional"
+      - "Bilingual message support implemented"
+      - "Delivery status tracking accurate"
+      - "Integration with Agent-5 WhatsApp proxy working"
+
+  # Sub-task 5: Reporting and Analytics APIs
+  ST-005:
+    title: "Reporting and Business Analytics APIs"
+    estimated_hours: 4
+    description: |
+      Create comprehensive reporting APIs for business intelligence,
+      supporting different data views per subdomain and real-time metrics.
+    
+    deliverables:
+      - "artifacts/api/controllers/reports_controller.js"
+      - "artifacts/api/controllers/analytics_controller.js"
+      - "artifacts/api/services/reporting_service.js"
+      - "artifacts/api/aggregation/metrics_aggregator.js"
+    
+    reporting_endpoints:
+      business_reports:
+        - "GET /reports/orders - Order reports with filtering"
+        - "GET /reports/revenue - Revenue analytics"
+        - "GET /reports/productivity - Staff productivity metrics"
+        - "GET /reports/client-satisfaction - Customer satisfaction scores"
+        - "GET /reports/inventory - Inventory status reports"
+      
+      analytics_apis:
+        - "GET /analytics/dashboard - Real-time dashboard data"
+        - "GET /analytics/trends - Trend analysis"
+        - "GET /analytics/kpis - Key performance indicators"
+        - "GET /analytics/forecasting - Business forecasting data"
+      
+      real_time_metrics:
+        - "WebSocket endpoint for live dashboard updates"
+        - "Server-sent events for status notifications"
+        - "Caching for frequently accessed reports"
+    
+    subdomain_specific_data:
+      clients:
+        - "Order history and status"
+        - "Invoice and payment tracking"
+        - "Project progress metrics"
+      
+      staff:
+        - "Task queue metrics"
+        - "Productivity analytics"
+        - "Resource utilization"
+      
+      admin:
+        - "Complete business intelligence"
+        - "Financial analytics"
+        - "System performance metrics"
+    
+    acceptance_criteria:
+      - "All report endpoints working with proper filtering"
+      - "Real-time data updates functional"
+      - "Performance optimized for large datasets"
+      - "Subdomain-specific data isolation maintained"
+
+  # Sub-task 6: API Documentation and Testing
+  ST-006:
+    title: "API Documentation and Comprehensive Testing"
+    estimated_hours: 4
+    description: |
+      Create comprehensive API documentation, automated testing suites,
+      and performance benchmarking for all endpoints.
+    
+    deliverables:
+      - "artifacts/docs/api_documentation.yaml" # OpenAPI spec
+      - "artifacts/docs/api_guide.md"
+      - "artifacts/tests/api_test_suite.js"
+      - "artifacts/tests/performance_tests.js"
+      - "artifacts/postman/cflex_api_collection.json"
+    
+    documentation_requirements:
+      openapi_spec:
+        - "Complete OpenAPI 3.0 specification"
+        - "Request/response examples for all endpoints"
+        - "Authentication requirements documented"
+        - "Error response formats standardized"
+        - "Rate limiting information included"
+      
+      developer_guides:
+        - "API integration guide"
+        - "Authentication flow documentation"
+        - "Webhook implementation guide"
+        - "Error handling best practices"
+        - "SDK examples for common languages"
+    
+    testing_coverage:
+      unit_tests:
+        - "All controller methods tested"
+        - "Business logic service tests"
+        - "Middleware functionality tests"
+        - "Authentication and authorization tests"
+      
+      integration_tests:
+        - "End-to-end API flow tests"
+        - "Database integration tests"
+        - "External service integration tests"
+        - "Multi-tenant isolation tests"
+      
+      performance_tests:
+        - "Load testing for 30 concurrent users"
+        - "Response time benchmarking"
+        - "Memory and CPU usage profiling"
+        - "Database query performance testing"
+    
+    acceptance_criteria:
+      - "API documentation comprehensive and accurate"
+      - "Test coverage >90% for critical paths"
+      - "Performance benchmarks met"
+      - "Postman collection working for all endpoints"
+
+overall_deliverables:
+  api_implementation:
+    - "artifacts/api/controllers/" # All controller files
+    - "artifacts/api/middleware/" # Authentication, tenant, rate limiting
+    - "artifacts/api/services/" # Business logic services
+    - "artifacts/api/models/" # Data models and validation
+    - "artifacts/api/routes/" # Route definitions
+    - "artifacts/api/config/" # Configuration files
+  
+  documentation:
+    - "artifacts/docs/api_documentation.yaml" # OpenAPI specification
+    - "artifacts/docs/api_integration_guide.md"
+    - "artifacts/docs/authentication_flow.md"
+    - "artifacts/docs/subdomain_api_differences.md"
+  
+  testing:
+    - "artifacts/tests/unit/" # Unit test files
+    - "artifacts/tests/integration/" # Integration test files
+    - "artifacts/tests/performance/" # Performance test files
+    - "artifacts/postman/" # Postman collections
+  
+  deployment:
+    - "artifacts/deployment/api_deployment.yml"
+    - "artifacts/deployment/nginx_config.conf"
+    - "artifacts/deployment/pm2_ecosystem.config.js"
+
+success_metrics:
+  technical:
+    - "API response time <200ms P95 for standard operations"
+    - "Authentication success rate >99.9%"
+    - "API uptime >99.8%"
+    - "Error rate <0.1% for non-user errors"
+    - "Test coverage >90% for critical paths"
+    - "Documentation completeness 100%"
+  
+  business:
+    - "Support for 30 concurrent users per subdomain"
+    - "Multi-tenant data isolation 100% verified"
+    - "File upload success rate >99% for files <500MB"
+    - "Real-time notification delivery <2 seconds"
+    - "Business logic accuracy 100%"
+
+quality_gates:
+  - "All API endpoints properly authenticated and authorized"
+  - "Tenant data isolation enforced at API level"
+  - "Rate limiting preventing abuse"
+  - "Comprehensive error handling and logging"
+  - "API documentation accurate and complete"
+  - "Performance benchmarks met under load"
+  - "Security best practices implemented"
+  - "Integration with other agents working"
+
+integration_points:
+  agent_1_database:
+    - "Database schema utilization"
+    - "Query optimization based on indexes"
+    - "Foreign key constraint respect"
+  
+  agent_3_file_processor:
+    - "File upload coordination"
+    - "Processing status updates"
+    - "Preview generation triggers"
+  
+  agent_5_integration:
+    - "WhatsApp message queueing"
+    - "Email notification triggers"
+    - "Communication status updates"
+  
+  agent_6_monitoring:
+    - "API metrics exposition"
+    - "Performance data collection"
+    - "Error tracking integration"
+
+next_tasks_enabled:
+  - "T-004-UI-FOUNDATION" # Agent-4 can build frontend
+  - "T-005-WHATSAPP-INTEGRATION" # Agent-5 can integrate communications
+  - "T-007-API-TESTING" # Agent-7 can create API tests
+
+notes: |
+  This comprehensive API foundation incorporates patterns from:
+  - Twenty: TypeScript patterns and GraphQL concepts adapted to REST
+  - ERPNext: DocType patterns and Frappe framework structure
+  - Ever-Gauzy: Multi-tenant NestJS architecture and service patterns
+  - Odoo: Web controller patterns and RPC concepts
+  - NocoBase: Plugin-based architecture and dynamic endpoints
+  - Akaunting: Laravel resource controller patterns
+  
+  Key implementation focuses:
+  1. Multi-tenant subdomain architecture with proper isolation
+  2. RESTful design with consistent patterns across all endpoints  
+  3. Comprehensive authentication and authorization
+  4. Integration-ready design for all other agents
+  5. Performance optimization for concurrent users
+  6. Extensive documentation and testing
+  
+  Critical integration dependencies:
+  - Requires Agent-1 database schema completion
+  - Coordinates with Agent-3 for file processing
+  - Integrates with Agent-5 for communications
+  - Exposes metrics for Agent-6 monitoring
+  - Provides endpoints for Agent-4 frontend consumption

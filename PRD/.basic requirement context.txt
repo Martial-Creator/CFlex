@@ -1,0 +1,697 @@
+Key Takeaways
+Comprehensive Solution • A complete all-in-one printing business management system integrating customer management, order processing, design workflow, inventory tracking, and e-commerce functionality using customized open-source platforms.
+Core Architecture • Built on Rise crm as the primary platform with Bagisto for e-commerce, deployed on cPanel hosting with multiple subdomains for load distribution and functional separation.
+Workflow Automation • Streamlined process from order submission through design phase, client review with visual annotation tools, automated approval triggers, production queue management, and invoice generation with WhatsApp/email notifications.
+Technical Integration • Multi-format file handling (TIF/TIFF to JPG conversion), progressive upload capabilities, visual markup tools for client feedback, automated pricing calculations, and future AR/VR 3D modeling capabilities.
+Business Operations • Support for organizational hierarchies, individual customers, and guest users with role-based permissions, custom pricing for complex items, credit management, and comprehensive audit trails for order tracking.
+Based on your comprehensive requirements and client responses, here's the refined Product Requirements Document (PRD):
+
+REFINED PRODUCT REQUIREMENTS DOCUMENT
+All-in-One Printing Business Management Solution v2.0
+EXECUTIVE SUMMARY
+This document presents the finalized requirements for Caldron Flex's comprehensive printing business management system. Based on client clarifications, the solution will use Rise crm as the primary platform with Bagisto integration for e-commerce functionality, deployed on cPanel hosting with expected capacity of 6 daily orders and 30 concurrent users.
+
+1. TECHNICAL ARCHITECTURE (FINALIZED)
+1.1 Primary Platform Strategy
+* Core System: Rise crm (confirmed by client as the "brain")
+* E-commerce: Bagisto integration for store.caldronflex.com.np
+* Database: MySQL with automated daily backups
+* File Storage: Progressive upload system supporting up to 500MB files
+* Languages: Bilingual support (English/Nepali)
+1.2 Infrastructure Specifications
+* Hosting: cPanel (no Docker support)
+* Storage: 1.5TB capacity
+* RAM: 3GB allocated
+* Bandwidth: Unlimited
+* Expected Load: Medium (30 concurrent users, 6 daily orders)
+1.3 Domain Structure
+* Main Application: app.caldronflex.com.np
+* E-commerce Store: store.caldronflex.com.np
+* Additional Subdomains: Multiple subdomains for load distribution
+
+2. USER MANAGEMENT & ROLES
+2.1 Staff Structure
+* Super Administrator: Full system access
+* Staff Admin: Complete operational access (1 person)
+* Staff Helper: Configurable limited access (1-2 people)
+* Task Assignment: Queue-based system where staff claim tasks
+2.2 Client Hierarchy
+* Organization Admin: Full organizational control
+* Organization Members: Configurable permissions by admin
+* Individual Customers: Personal account management
+* Guest Users: Minimal registration (name + phone only)
+2.3 Permission Management
+* Dynamic Role Creation: System admin can create/modify roles
+* Granular Permissions: Configurable access levels for all user types
+* Organizational Control: Organization admins manage member permissions
+
+3. CORE WORKFLOW AUTOMATION
+3.1 Order Processing Pipeline
+Order Submission ? Task Queue ? Staff Assignment ? Design Phase ? 
+File Upload (TIF/TIFF) ? Auto JPG Conversion ? Client Review ? 
+Annotation/Feedback ? Corrections ? Final Approval ? 
+Production Queue ? Completion ? Invoice Generation ? Payment Tracking
+3.2 File Management System
+* Upload Formats: JPEG, PDF, SVG, PSD, PNG, TIFF (max 500MB)
+* Preview Generation: Automatic TIF/TIFF to JPG conversion
+* Client Upload: Reference images supported
+* Version Control: Initial file storage with annotation overlay system
+* Future Integration: Adobe Photoshop API compatibility
+3.3 Design Review Process
+* Visual Annotation: Simple commenting and highlighting tools
+* Revision Limit: Maximum 5 correction rounds per project
+* Version Tracking: Original file + annotation layers
+* Approval System: Digital sign-off with timestamp
+
+4. PRODUCT INFORMATION MANAGEMENT
+4.1 Pricing Structure (Annual Updates)
+* Fixed Pricing Products: Automated calculation based on size/variant
+* Custom Pricing: Manual quote generation for complex items
+* Bulk Discounts: Configurable promotional pricing
+* Staff Override: Price adjustment capabilities for authorized staff
+4.2 Product Categories
+1. Flex Banner: Rs.40-150/sqft (Normal, Sticker, Degradable variants)
+2. Certificate Printing: Rs.99-299/piece (quality variants)
+3. Token of Love: Rs.250-4000/piece (frame design variants)
+4. Photo Frame: Rs.349-3000/piece (design variants)
+5. Stamps: Rs.300-500/piece (Pre-ink, Normal types)
+6. Metal Medals: Configurable as bundles (Gold/Silver/Bronze) or individual pieces
+7. Custom Quote Items: Holding board, Shield/Trophy, ID cards
+4.3 Inventory Management
+* Mixed Level Tracking: Raw materials and finished goods
+* Flex/Banner Exception: Finished goods level only (complex conversion process)
+* Stock Alerts: Automated low inventory warnings
+* No Barcode System: Manual inventory tracking initially
+
+5. BUSINESS OPERATIONS
+5.1 Customer Management
+* Credit Facilities: Supported for organizations and regular customers
+* Payment Terms: Partial payments tracked (amount paid vs. remaining)
+* No Refund Policy: Design approval process eliminates returns
+* Customer History: Preference and order tracking enabled
+5.2 Communication System
+* WhatsApp Integration: Proxy server implementation
+* Email Notifications: All status updates and invoices
+* Preferred Channels: WhatsApp and email as primary communication
+* Template System: Automated messaging for standard updates
+5.3 Operational Workflow
+* Rush Order Handling: Deadline-based priority system
+* Quality Control: No formal checkpoints initially
+* Complaint System: Client ticket system with staff escalation to admin
+* Seasonal Handling: System flexibility for volume increases
+
+6. REPORTING & ANALYTICS
+6.1 Standard Reports
+* Daily Reports: Order status, completion rates, pending tasks
+* Weekly Reports: Staff productivity, customer satisfaction
+* Monthly Reports: Revenue analysis, product performance
+* Financial Reports: Future functionality with configurable tax calculations
+6.2 Future Analytics
+* Customer Insights: Planned for future implementation
+* Predictive Analytics: Based on historical data patterns
+
+7. INTEGRATION REQUIREMENTS
+7.1 Current Integrations
+* WhatsApp Business API: Official integration recommended over proxy
+* Email System: SMTP integration for notifications
+* File Storage: Cloud storage for large file handling
+7.2 Future Integrations
+* Adobe Photoshop: API integration for design software
+* Mobile Applications: iOS/Android companion apps
+* 3D Modeling: AR/VR preview system (targeted for this year)
+
+8. SECURITY & COMPLIANCE
+8.1 Data Protection
+* File Security: Standard encryption for client files
+* Backup Strategy: Automated daily backups
+* Access Control: Role-based permissions with audit trails
+* Privacy: No specific privacy requirements initially
+8.2 Audit Trail
+* Order Tracking: Complete history from submission to delivery
+* Change Logging: All modifications tracked with timestamps
+* Payment Records: Cash/cheque transaction logging
+
+9. IMPLEMENTATION STRATEGY
+9.1 Platform Integration Approach
+Given the complexity of merging multiple platforms, the recommended approach is:
+1. Primary System: Rise crm as the core database and logic handler
+2. E-commerce Module: Bagisto integration via API synchronization
+3. Custom Interface: Build workflow-specific UI on Rise crm framework
+4. Data Synchronization: Real-time sync between platforms for inventory, customers, and orders
+
+10. RISK MITIGATION
+10.1 Technical Risks
+* cPanel Limitations: Simplified architecture to work within hosting constraints
+* File Size Management: Progressive upload system with cloud storage integration
+* System Integration: API-based approach for reliable data synchronization
+10.2 Business Risks
+* Order Management: Automated priority system prevents deadline issues
+* Quality Control: Comprehensive design approval process eliminates defects
+* Staff Training: Gradual rollout with extensive training program
+
+11. SUCCESS METRICS
+11.1 Operational Efficiency
+* Order Processing: 50% reduction in manual workflow steps
+* File Management: 90% automation in preview generation
+* Customer Communication: 80% reduction in manual notifications
+11.2 Business Growth
+* Order Capacity: Support for 3x current volume without additional staff
+* Customer Satisfaction: 95% approval rate on first design submission
+* Revenue Impact: 25% increase in throughput capacity
+
+CONCLUSION
+This refined PRD addresses all client requirements and provides a realistic, implementable solution for Caldron Flex's printing business management needs. The focus on Rise crm as the primary platform with strategic Bagisto integration ensures a stable, scalable foundation while meeting the specific workflow requirements of the printing industry.
+The phased implementation approach allows for gradual rollout and refinement, ensuring the system meets operational needs while providing a platform for future growth and enhancement.
+
+
+
+
+
+
+
+
+Product Requirement Document: Caldron Flex All-in-One Business Management System
+Document Version: 2.0
+Date: July 9, 2025
+Author: Product Requirement Analysis Officer
+Status: Refined Draft for Final Review
+
+1. Executive Summary
+This document details the definitive requirements for a custom-built, all-in-one web application for Caldron Flex. The system is designed to digitize and automate the entire business workflow, from client onboarding and order management to production, invoicing, and customer relations.
+The strategic decision has been made to build the system with Ever Gauzy as the core ERP "brain," integrating it with Bagisto for e-commerce. This refined strategy aims to create a cohesive and powerful platform by modifying and extending these open-source solutions. The primary goals remain to boost operational efficiency, elevate the customer experience, and establish a scalable foundation for future growth, all while adhering to specified technical and business constraints.
+
+2. Project Vision & Scope
+2.1. Vision
+To create a singular, unified digital hub that manages every facet of the printing business lifecycle. The platform will serve as the central nervous system for Caldron Flex, automating critical workflows, providing complete transparency into operations, and empowering staff to deliver exceptional service.
+2.2. Scope
+In-Scope:
+* Centralized Order & Production Workflow: A complete system for managing custom print jobs from initial client submission, through design, a robust client proofing/correction cycle, approval, and final invoicing.
+* Advanced Client Management (CRM): A sophisticated system to manage Organizations (with internal member hierarchies and permissions), registered Individuals, and temporary Guest customers.
+* Product & Pricing Management (PIM): A dynamic catalog of all products and services with support for attribute-based pricing (e.g., per square foot), variant pricing, and manual quoting for custom jobs.
+* Integrated E-commerce Storefront: A dedicated storefront powered by Bagisto on the store.caldronflex.com.np subdomain, for selling standardized, ready-to-ship items.
+* Core Business Operations: Essential modules for inventory management (supporting both raw materials and finished goods), purchasing, and financial tracking (invoicing, credit management, and payment status).
+* Automated Multichannel Communication: Automated notifications to clients via email and a self-hosted WhatsApp proxy server.
+* Interactive Design Proofing & File Management: A secure and user-friendly workflow for handling various design file formats, generating web-previews, and capturing client feedback through an annotation tool.
+Out-of-Scope (for Initial Version):
+* Direct Online Payment Gateways: All payments will be managed offline via cash or cheque. The system's role is to generate invoices and track payment status.
+* Advanced Accounting Suite: The system will not perform complex accounting functions like tax filing or generating official financial statements. Tax calculation will be a configurable feature on invoices.
+* Automated Quality Control Checkpoints & Production Tracking: Detailed real-time tracking of the physical printing process is not required for the initial version.
+* Automated Shipping & Logistics Integration: The system will mark orders as "Ready for Collection" for in-person pickup only.
+
+3. User Roles & Personas (Refined)
+1. System Administrator: Super-user with unrestricted access. Manages platform settings, core configurations, and all user accounts and roles.
+2. Staff (Admin): The primary operational manager. Has full access to all business modules (projects, clients, invoicing, inventory). Can create and configure access levels for other staff members.
+3. Staff (Helper): A general staff member with restricted access. Their permissions (e.g., view tasks, upload designs, update status) are configurable by the Staff Admin. Initially, there will be one Admin and one Helper.
+4. Client (Organization Admin): The main contact for a business client. Can create projects, manage their organization's members, define member permissions (e.g., "Can Submit Tasks," "Can Approve Designs"), and view all organizational activity.
+5. Client (Organization Member): A user under an organization with permissions granted by their Admin.
+6. Client (Individual): A registered customer who manages their own projects and profile.
+7. Client (Guest/Temporary): A one-time customer who can place an order using minimal information (Name and Phone Number).
+
+4. System Architecture & Technical Strategy (Refined)
+4.1. Open-Source Foundation
+The technical strategy is now focused and streamlined:
+* Core Framework/ERP: Ever Gauzy will serve as the "brain" of the operation. It will be heavily customized to handle the core CRM, project management, PIM, and inventory logic. The system will be built on top of and extended from Ever Gauzy's framework.
+* E-commerce: Bagisto (Laravel-based) will exclusively power the store.caldronflex.com.np subdomain. A robust API will be developed to ensure two-way synchronization of customers, inventory, and orders between Bagisto and Ever Gauzy to maintain a single source of truth.
+* Feature Inspiration: UI/UX concepts and specific workflow ideas from Rise CRM and Twenty CRM will be used as inspiration for building out the custom front-end on Ever Gauzy, rather than attempting a technical integration.
+4.2. Deployment & Hosting
+* Environment: The application stack must be deployable on a cPanel hosting environment without Docker support.
+* Initial Server Specs: The target deployment environment has 3GB RAM, 1.5TB Storage, and unmetered bandwidth.
+* Strategy: This is a significant constraint. The development will need to be optimized for this specific environment. The use of a separate cPanel account purely for file storage is a viable strategy to manage large design files, with the main application residing on the primary account.
+* Future Scalability: The client acknowledges that as the business grows, a migration to a more robust Virtual Private Server (VPS) will be considered.
+
+5. Functional Requirements & Features (Refined)
+5.1. Workflow Automation: The Core Printing Process
+This workflow remains the heart of the system, with the following clarifications:
+* Task Assignment: Tasks entering the "New" queue can be claimed by any available staff member. There is no manual assignment by a manager.
+* Quoting for Custom Jobs: For items like "Holding Boards," the client will either consult in the office or submit requirements through the portal. A staff member will then manually create a configured project with a fixed price within the system, effectively bypassing the initial client submission step.
+5.2. Design Proofing & Version Control
+* Supported File Formats: The system will accept a wide range of design files, including TIFF, JPEG, PDF, SVG, PSD, and PNG, with a maximum upload size of 500MB. Clients can also upload reference images with their orders.
+* Annotation Tool: The web-based tool will allow clients to place pins and add simple comments to highlight required changes on the JPG preview.
+* Version Control: The system will not store a new TIFF file for every revision. Instead, it will store the initial version of the design file. Subsequent corrections will be stored as a list of comments and annotations linked to that version. The designer will work off the original file and this list of changes.
+5.3. Inventory Management (Mixed Model)
+* Logic: Inventory will be managed using a mixed model. 
+o Finished Goods Level: For products like flex banners where the raw material (roll) is converted into a custom-sized final product, inventory will be tracked at the finished good level (e.g., tracking the output, not the input roll).
+o Raw Material & Finished Goods Level: For other products sold after configuration (e.g., frames, medals), the system will track both the raw components and the final configured items.
+* Pricing: Inventory levels will not be used for automatic price calculation.
+* Alerts: The system will warn staff when materials are out of stock.
+5.4. Financial & Customer Management
+* Tax Calculation: Tax (e.g., GST/VAT) must be a configurable feature that can be added to invoices.
+* Partial Payments: The system will handle partial payments by logging the amount paid and showing the remaining "amount due" on the invoice.
+* Customer Credit: A credit management feature is required for trusted organizational clients, allowing them to complete projects and pay via cheque at the end.
+* Refunds/Cancellations: No refund mechanism is required, as the client's approval of the final proof is considered binding.
+5.5. Multilingual Support & API
+* Language: The entire user-facing interface (both client and staff portals) must support both English and Nepali.
+* API Access: An API must be available to allow for potential future integrations with other systems.
+
+6. Questions for Final Client Clarification
+Your detailed feedback has been invaluable. Here are the final key questions to ensure perfect alignment before development begins:
+A. On Business & Workflow Logic:
+1. Design Revisions: You mentioned allowing up to 5 design revisions. Should the system enforce this limit automatically, or is it just a guideline for staff?only guidance for staff
+2. Urgent Orders: How should the system visually distinguish or prioritize a "rush order"? Should there be a specific "urgent" flag that staff can set, which places the task at the top of the queue?yes
+3. Customer Complaints: For the complaint/ticket system, what is the exact workflow? Does a client ticket automatically pause a project? What are the typical resolution steps?(consider your best solution ad apply it)
+4. Credit Management: For clients on credit, should the system have a configurable credit limit for each organization to prevent exceeding a certain amount of unpaid work?no,not needed
+B. On Product & Pricing Details:
+5. Medal Variants: For metal medals, you noted they are sold as a G/S/B set but should also be configurable to be sold individually. For individual sale, should each color (Gold, Silver, Bronze) have a potentially different price, or will they be the same?same price
+6. Seasonal Pricing: You confirmed a need for seasonal/promotional pricing. How should this work? Should it be a manual discount code, or should the system allow you to set specific date ranges where certain products have a different price?it should have manual discount code for certain date range in certain product(canbe postpone to next version)
+C. On Technical & User Experience:
+7. Staff Permissions (Helper Role): Can you provide a specific list of actions the "Staff Helper" should and should not be able to do initially? (e.g., Can view tasks? Can upload files? Can communicate with clients? Can view financial data?)they have all the access to the functionality except for purchase price
+8. AR/VR Timeline: You mentioned the AR/VR preview is planned for "this year." Can you confirm if this is a hard requirement for the initial launch, or if it can be a fast-follow feature in Phase 2? This has significant technical implications.(the ar/vr view feature is already in bagisto just need to create the ar/vr type file of the products
+9. WhatsApp Integration: You clarified using a "WhatsApp proxy server." To ensure reliability, it's strongly recommended to use the official WhatsApp Business API. Is the business prepared for the potential per-message costs associated with the official API to guarantee stable communication with clients?no
+
+Of course. Based on the extensive details, client clarifications, and raw requirements you've provided, I have analyzed, consolidated, and improved the information into a single, cohesive Product Requirement Document (PRD). This revised document resolves architectural conflicts, incorporates your client's specific answers, and presents the project in a structured format ready for development planning.
+
+Product Requirement Document: Caldron Flex All-in-One Business Management System
+Document Version: 2.0
+Date: July 8, 2025
+Author: Product Requirement Analysis Officer
+Status: Final Draft
+
+1. Introduction & Vision
+1.1. Project Vision
+To create a unified digital platform that serves as the central nervous system for the Caldron Flex printing business. This system will seamlessly integrate every step of the process, from initial client order to final payment and collection, automating routine tasks, providing clear operational visibility, and creating a scalable foundation for future growth.
+1.2. Business Problem
+Caldron Flex currently manages a complex workflow involving diverse custom products, multiple client types, and a multi-stage production process (design, proofing, printing). The lack of a centralized system leads to operational inefficiencies, potential communication gaps with clients, and difficulties in tracking orders, inventory, and payments. This project aims to solve these challenges by building a custom, all-in-one software solution.
+1.3. Project Goal
+To develop and deploy a custom web application that streamlines all business operations. The system will manage the entire order lifecycle, automate client communication, handle product and inventory management, and provide a clear interface for both staff and customers, ultimately increasing efficiency, reducing errors, and improving customer satisfaction.
+
+2. Scope
+2.1. In-Scope (Initial Release)
+* End-to-End Order & Production Management: Managing tasks from client submission, through a staff-claimed design queue, proofing, client approval, and invoicing.
+* Client Management (CRM): A robust system for managing Organizations (with hierarchical members), Individuals, and temporary Guest customers. Includes credit management for organizations.
+* Product Information Management (PIM): A centralized catalog for a diverse product range with both automatically calculated (e.g., per sq. ft.) and manually quoted pricing. Includes support for seasonal pricing.
+* Core Business Operations: Modules for inventory (at both raw material and finished good levels), purchasing, and financial tracking (invoicing, expense logging, partial payment tracking).
+* Automated Communication: Automated notifications to clients for key status changes via email and a self-hosted WhatsApp server.
+* File Management & Proofing: A secure workflow for handling various design file formats (up to 500MB), providing clients with web-based, annotatable JPG previews for feedback.
+* API Access: Provide an API for potential future external system integrations.
+* Bilingual Support: The entire user-facing interface must support both English and Nepali.
+2.2. Out-of-Scope (Initial Release)
+* Direct Online Payment Gateways: All payments will be handled offline via cash or cheque. The system will track payment status but not process transactions.
+* Automated Shipping Logistics: The system will mark items as "Ready for Collection" but will not integrate with shipping carriers.
+* Advanced Staff Management: Employee productivity tracking and full-fledged HR features are not required initially.
+* Automated Quality Control & Production Tracking: Physical production stages and quality checks will not be tracked in the system for now.
+* Refunds/Cancellations Workflow: As per the business model, this is not permitted after the client approves the design proof.
+
+3. User Roles & Personas
+RoleDescriptionKey PermissionsSystem AdminManages the entire platform, system settings, and core configurations. Has super-user privileges.Full system access. Manages staff roles and top-level permissions.Staff (Admin)A senior staff member with full access to operational functionality. Can manage projects, clients, and other staff members.Full access to all modules except core system configuration. Can manage "Staff Helper" permissions.Staff (Helper)A junior staff member who works on assigned tasks. Their access can be configured by the Staff Admin.Claims tasks from the queue, uploads designs, responds to client feedback. Access to other modules is configurable.Client (Org Admin)The primary contact for a business client.Creates projects, views all tasks for their organization, manages their members' permissions, approves final designs.Client (Org Member)A user under an Organization, with permissions set by their Org Admin.Submits tasks and provides feedback. Approval authority is determined by the Org Admin.Client (Individual)A registered individual customer.Manages their own projects, provides feedback, views order history, and approves their designs.Client (Guest)A one-time customer placing an order via a simplified process.Submits a task with minimal information (Name, Phone Number). Encouraged to create a full account.
+4. System Architecture & Technical Strategy
+4.1. Core Platform Strategy
+To avoid the extreme complexity and instability of merging over six different platforms, this project will adopt a "core and satellite" architecture.
+* Core System ("The Brain"): Ever Gauzy will be selected as the primary platform. It will be heavily customized to serve as the central database and logic handler for projects, CRM, and core business operations. Features and UI/UX concepts from Rise CRM and Twenty CRM will be used as inspiration for building custom modules within the Ever Gauzy framework, not integrated as separate systems.
+* E-commerce Satellite: Bagisto will be used to power the public-facing e-commerce storefront at store.caldronflex.com.np. A robust, custom-built API will synchronize products, inventory, and customer data between Bagisto and the core Ever Gauzy system.
+4.2. Subdomain Strategy
+* app.caldronflex.com.np: The main portal for clients and staff to manage custom printing projects. This will be the interface for the customized Ever Gauzy system.
+* store.caldronflex.com.np: The public-facing e-commerce storefront powered by Bagisto.
+* Additional subdomains can be configured as needed for specific services (e.g., api.caldronflex.com.np).
+4.3. Deployment & Hosting
+* Initial Deployment: The application stack must be deployable on a cPanel hosting environment. This is a hard constraint for the initial launch. The development team must account for cPanel's limitations (e.g., no Docker support).
+* Future Scalability: The client acknowledges that a Virtual Private Server (VPS) will be considered as the business grows. A proposed strategy is to use a VPS for application hosting (to handle the complex stack) and leverage a cost-effective cPanel plan primarily for large-volume file storage.
+4.4. WhatsApp Integration
+The system will integrate with a "self-hosted WhatsApp server." This implies using a proxy or an unofficial API. This poses a significant reliability risk. The architecture should include a fallback mechanism to email notifications if the WhatsApp service is interrupted. The use of the official WhatsApp Business API is the recommended long-term solution.
+
+5. Functional Requirements & Features
+5.1. Core Workflow & Project Management
+* Task Queue: New tasks appear in a general queue where any available staff member can claim them.
+* Automated Status Transitions: The system must automatically update a task's status based on user actions (e.g., submitting a proof changes status to "Awaiting Client Review").
+* Priority Management: Task priority will be determined primarily by the client-specified deadline. Staff can manually manage rush orders.
+* Hierarchical Projects: The system will support grouping multiple related tasks under a single "Project" entity.
+5.2. Design Proofing & File Management
+* File Support: The system will accept various design formats, including JPG, PDF, SVG, PSD, PNG, and TIFF.
+* Automatic Preview: On upload of a source file (e.g., TIFF), the system must automatically generate a watermarked, low-resolution JPG preview for the client.
+* Design Annotation Tool: The client interface must include a simple tool allowing users to place comments and highlight areas on the JPG preview to request corrections.
+* Version Control: The system must store the client's initial file. For revisions, it will store the list of requested changes (comments and highlights). Storing every full-version iteration of the source TIFF file is not required.
+* Client Reference Files: Clients must be able to upload reference images or documents when submitting a task.
+5.3. Product & Pricing Management (PIM)
+* Dynamic Pricing: The system will automatically calculate prices for products based on attributes (e.g., Rs./sq. ft. for banners).
+* Custom Quotes: Products like "Holding Boards" will be flagged for manual quoting by staff within the system. Staff can create a quote, which, upon client approval (done offline), becomes a priced order.
+* Price Overrides: Staff must have the permission to manually override system-calculated prices.
+* Configurable Products: The system must allow administrators to configure complex products, such as a "Metal Medal" set that can be sold as a bundle (Gold/Silver/Bronze) or as individual items with different prices.
+* Tax Calculation: The system must support a configurable tax rate (e.g., GST) that is applied to invoices.
+5.4. Invoicing & Payments
+* Automated Invoice Generation: An invoice is automatically generated and sent to the client when a task's status changes to "Ready for Collection."
+* Payment Tracking: Staff can manually record payments (Cash or Cheque) against an invoice.
+* Partial Payments: The system must handle partial payments, showing the remaining balance due on the invoice.
+* Credit Management: The system will track credit offered to clients (especially organizations).
+5.5. Inventory Management
+* Mixed-Level Tracking: Inventory will be managed at both the raw material level (e.g., paper, frames) and the finished goods level (e.g., pre-made banners).
+* Stock-Out Alerts: The system will warn staff when a task requires a material that is low in stock.
+* No Material Costing for Pricing: Inventory levels will be for operational tracking only and will not be used to calculate the price of a finished product.
+5.6. Administration & Reporting
+* Configurable Roles & Permissions: The System Admin must have an interface to create and modify the permissions for all user roles, including granular controls for Staff Helpers and Client Organization members.
+* Reporting Module: While not a primary focus for day-one, the system must have the foundational capability to generate operational reports (daily, weekly, monthly sales) and future customer analytics.
+
+6. Non-Functional Requirements
+CategoryRequirementPerformanceThe system must support ~30 concurrent users without significant degradation. Page loads and file operations should be responsive.SecuritySecure handling of client data and design files is critical. Standard security practices (e.g., input sanitization, authentication) must be followed. File access should be permission-based.BackupA daily backup of the database and application files must be performed automatically.UsabilityThe interface must be intuitive for both technical and non-technical users and must be fully functional in both English and Nepali.
+7. Future Enhancements & Roadmap
+* Phase 1: Core System (Initial Release) 
+o Development of all features listed in this PRD.
+* Phase 2: AR/VR & Advanced Integrations (Target: Within 1 year) 
+o AR/VR Preview: Implement a feature to automatically generate 3D/AR previews from 2D design files.
+o Adobe Photoshop Integration: Explore direct integration with design software.
+* Phase 3: Mobility & Expansion 
+o Mobile App: Develop a companion mobile application for clients and staff.
+o Franchise/Multi-location Support: Investigate architectural changes to support multiple business locations.
+* Key Takeaways
+* Executive Summary • Comprehensive printing business management system integrating CRM, order processing, design workflow, inventory, and e-commerce capabilities through customized open-source platforms with Rise crm as the core brain.
+* Technical Architecture • Multi-subdomain deployment on cPanel initially with future VPS migration, using Rise crm as primary system, Bagisto for e-commerce, supporting 30 concurrent users with 1.5TB storage and 3GB RAM.
+* Core Workflow • Automated pipeline: Order submission ? Staff queue claiming ? Design phase with TIF/TIFF uploads ? JPG preview generation ? Client review with annotation tools ? Production ? Invoice generation ? Cash/cheque payment tracking.
+* User Management • Three-tier system with organizations (60%), individuals (30%), and guests (10%), featuring configurable role-based permissions for 3-4 staff members and unlimited client accounts with hierarchical access control.
+* Product Catalog • 12+ product categories including flex banners (Rs.40-150/sqft), certificates, stamps, frames, and custom items with dynamic pricing based on variants, seasonal promotions, and manual override capabilities.
+* File Handling • Support for multiple formats (JPEG, PDF, SVG, PSD, PNG, TIFF) up to 500MB, automatic JPG conversion for previews, annotation-based correction tracking instead of full version control, with daily backups.
+* Communication System • Dual-channel notifications via WhatsApp proxy server and email, supporting both English and Nepali languages, with automated status updates and customizable message templates.
+* Payment & Billing • Cash/cheque only system with credit management for organizations, configurable GST/tax calculations, partial payment tracking, approximate pricing display, and no refund policy due to pre-approval process.
+* Inventory Management • Hybrid approach with finished goods tracking for most products except flex/banner materials, supplier management, low-stock alerts, and future potential for barcode scanning.
+* Future Roadmap • AR/VR preview implementation within the year, mobile app development, Adobe Photoshop integration, API access for external systems, operational reporting (daily/weekly/monthly), and customer analytics features.# Key Takeaways
+* Executive Summary • Comprehensive printing business management system integrating CRM, order processing, design workflow, inventory, and e-commerce capabilities through customized open-source platforms with Rise crm as the core brain.
+* Technical Architecture • Multi-subdomain deployment on cPanel initially with future VPS migration, using Rise crm as primary system, Bagisto for e-commerce, supporting 30 concurrent users with 1.5TB storage and 3GB RAM.
+* Core Workflow • Automated pipeline: Order submission ? Staff queue claiming ? Design phase with TIF/TIFF uploads ? JPG preview generation ? Client review with annotation tools ? Production ? Invoice generation ? Cash/cheque payment tracking.
+* User Management • Three-tier system with organizations (60%), individuals (30%), and guests (10%), featuring configurable role-based permissions for 3-4 staff members and unlimited client accounts with hierarchical access control.
+* Product Catalog • 12+ product categories including flex banners (Rs.40-150/sqft), certificates, stamps, frames, and custom items with dynamic pricing based on variants, seasonal promotions, and manual override capabilities.
+* File Handling • Support for multiple formats (JPEG, PDF, SVG, PSD, PNG, TIFF) up to 500MB, automatic JPG conversion for previews, annotation-based correction tracking instead of full version control, with daily backups.
+* Communication System • Dual-channel notifications via WhatsApp proxy server and email, supporting both English and Nepali languages, with automated status updates and customizable message templates.
+* Payment & Billing • Cash/cheque only system with credit management for organizations, configurable GST/tax calculations, partial payment tracking, approximate pricing display, and no refund policy due to pre-approval process.
+* Inventory Management • Hybrid approach with finished goods tracking for most products except flex/banner materials, supplier management, low-stock alerts, and future potential for barcode scanning.
+* Future Roadmap • AR/VR preview implementation within the year, mobile app development, Adobe Photoshop integration, API access for external systems, operational reporting (daily/weekly/monthly), and customer analytics features.
+PRODUCT REQUIREMENTS ANALYSIS & IMPROVEMENT REPORT
+Document Version: 2.0
+Date: July 10, 2025
+Analysis Officer: Product Requirements Analysis Team
+Status: Refined Requirements with Recommendations
+
+EXECUTIVE SUMMARY
+Based on the comprehensive PRD provided and client responses, this analysis identifies key improvements, technical recommendations, and remaining clarification needs for the All-in-One Printing Business Management Solution. The system will use Rise crm as the primary platform with selective integration of other open-source components.
+
+1. ARCHITECTURAL RECOMMENDATIONS
+1.1 Simplified Technical Stack
+Recommendation: Adopt a hub-and-spoke architecture with Rise crm as the central system:
+* Core Platform: Rise crm (Project management, CRM, workflow automation)
+* E-commerce Layer: Bagisto (store.caldronflex.com.np) with API integration
+* Custom Modules: Built within Rise crm framework for printing-specific features
+1.2 Integration Strategy
+Instead of merging 6+ platforms, implement:
+* Primary System: Rise crm (handles 80% of functionality)
+* Secondary Integration: Bagisto via REST API for e-commerce
+* Custom Extensions: Printing workflow, file management, pricing engine
+
+2. REFINED FUNCTIONAL REQUIREMENTS
+2.1 Enhanced User Role Structure
+Based on client feedback, implement:
+Staff Hierarchy:
+* Super Admin: Full system access, configuration management
+* Staff Admin: Project management, pricing override, customer management
+* Staff Helper: Task execution, basic customer interaction (configurable permissions)
+Client Hierarchy:
+* Organization Admin: Full organizational account control, member management
+* Organization Member: Task creation, project viewing (permission-based)
+* Individual Customer: Personal account management
+* Guest Customer: Minimal registration (name + phone only)
+2.2 Product Configuration System
+Metal Medal Example Implementation:
+* Bundle Product: Gold + Silver + Bronze Medal (single price)
+* Individual Components: Each medal can be sold separately
+* Configurable Bundling: Admin can create/modify product bundles
+* Applies to: Trophies, medal sets, certificate packages
+2.3 Inventory Management Strategy
+Mixed-Level Tracking:
+* Raw Materials: Basic tracking with alerts (paper, ink, frames)
+* Finished Goods: Detailed inventory for ready-to-sell items
+* Flex/Banner: Finished goods level (post-conversion from raw materials)
+* Configurable Products: Both raw material and finished goods tracking
+
+3. TECHNICAL SPECIFICATIONS & SOLUTIONS
+3.1 Server Requirements (Based on Client Specs)
+* Storage: 1.5TB (sufficient for file management)
+* RAM: 3GB (recommend upgrade to 4GB for optimal performance)
+* Bandwidth: Unlimited (adequate)
+* Anticipated Load: Medium (30 concurrent users)
+* Hosting: cPanel (no Docker support - limits some open-source options)
+3.2 File Management System
+File Handling Workflow:
+1. Upload: Multiple formats (JPEG, PDF, SVG, PSD, PNG, TIFF)
+2. Processing: Automatic conversion to JPG for preview
+3. Storage: Original files in secure storage, previews in CDN
+4. Versioning: Original + highlighted corrections (overlay system)
+5. Size Limit: 500MB per file
+3.3 WhatsApp Integration
+Clarification Needed: WhatsApp Proxy Server
+* Recommendation: Use official WhatsApp Business API for reliability
+* Alternative: If proxy server is preferred, implement with fallback to email/SMS
+* Templates: Pre-configured message templates for different status updates
+
+4. WORKFLOW AUTOMATION ENHANCEMENTS
+4.1 Task Assignment System
+Staff Claim Queue Implementation:
+* Task Pool: All new tasks enter a shared queue
+* Priority Display: Deadline-based sorting with visual indicators
+* Claim Mechanism: Staff can claim tasks from queue
+* Workload Balancing: System prevents overloading individual staff members
+4.2 Design Correction System
+Simplified Approach:
+* Original File: Store initial design file
+* Correction Overlay: Visual annotation layer with comments
+* Version Control: Track correction iterations without storing full files
+* Future Integration: Adobe Photoshop API for beta version
+4.3 Automated Workflow Triggers
+Order Submission ? Auto-assign to queue ? Staff claims ? Design phase ? 
+Upload design ? Auto-convert to JPG ? Client notification ? 
+Review/corrections ? Approval ? Auto-move to production queue ? 
+Completion ? Auto-generate invoice ? Payment tracking
+
+5. PRICING & BILLING IMPROVEMENTS
+5.1 Dynamic Pricing Engine
+Size-based Calculation Example:
+* Flex Banner: Base price × area (sqft) × quality multiplier
+* Certificates: Base price × quantity × paper type multiplier
+* Custom Items: Manual quote system with approval workflow
+5.2 Credit Management System
+Implementation:
+* Organization Credit: Monthly credit limits with cheque settlement
+* Payment Terms: Configurable credit periods
+* Credit Tracking: Outstanding balance monitoring
+* Partial Payments: Track amount paid vs. remaining balance
+
+6. MISSING COMPONENTS IDENTIFIED
+6.1 Customer Support System
+Recommendation: Implement ticket system for complaints/issues
+* Ticket Creation: Customers can create support tickets
+* Escalation: Staff ? Admin escalation workflow
+* Resolution Tracking: Complete audit trail
+6.2 Reporting Dashboard
+Essential Reports:
+* Daily Operations: Orders received, completed, pending
+* Weekly Summary: Revenue, popular products, staff performance
+* Monthly Analytics: Customer growth, profit margins, inventory turnover
+* Financial Tracking: Invoice generation, payment collection, outstanding amounts
+6.3 Notification Enhancement
+Multi-channel Strategy:
+* WhatsApp: Primary notification channel
+* Email: Backup and formal communications
+* In-app: Dashboard notifications for staff
+* SMS: Critical alerts (optional)
+
+7. CRITICAL QUESTIONS FOR FINAL CLARIFICATION
+7.1 Business Process Details
+1. Credit Limit Management: What should be the default credit limit for organizations?no(credit limit feature not needed to our client (caldron flex)
+2. Seasonal Pricing: How should the system handle festival season price adjustments?it should have manual configuration
+3. Bulk Discount Rules: Define specific volume thresholds and discount percentagesnot needed now
+4. Rush Order Handling: Should there be additional charges for urgent orders?no
+7.2 Technical Implementation
+5. Data Migration: Any existing customer data or files to migrate?no
+6. User Training: What level of training will staff need?from initial
+7. System Backup: Preferred backup schedule and storage location?i the cpanel server but in the next subdomain(bck.caldronflex.com.np)
+8. Performance Monitoring: What metrics should be tracked for system performance?normal as
+7.3 Future Expansion
+9. Mobile App Priority: Timeline for mobile app development?next phase around (3 to 4 mnth)
+10. Integration Readiness: Future integration with accounting software?yes
+11. AR/VR Timeline: Specific timeline for 3D modeling implementation?
+12. API Requirements: External API needs for third-party integrations?yes
+
+8. RISK MITIGATION STRATEGIES
+8.1 Technical Risks
+File Storage Overflow: Implement automatic file compression and archiving
+System Performance: Regular performance monitoring and optimization
+Data Security: Multi-layer security with encryption and access controls
+8.2 Business Risks
+Staff Adoption: Comprehensive training program and gradual rollout
+Customer Resistance: Maintain alternative communication channels during transition
+Workflow Disruption: Phased implementation with rollback capabilities
+
+9. IMPLEMENTATION ROADMAP (REVISED)
+Phase 1: Foundation (Months 1-2)
+* Rise crm setup and customization
+* Basic user management and authentication
+* Core workflow implementation
+* File upload and preview system
+Phase 2: Business Logic (Months 3-4)
+* Product catalog with dynamic pricing
+* Order management and task assignment
+* Design workflow with correction system
+* Basic reporting dashboard
+Phase 3: Integration (Months 5-6)
+* Bagisto e-commerce integration
+* WhatsApp/email notification system
+* Inventory management
+* Credit management system
+Phase 4: Optimization (Months 7-8)
+* Performance optimization
+* Advanced reporting and analytics
+* User experience improvements
+* System testing and bug fixes
+Phase 5: Future Features (Months 9+)
+* 3D modeling integration
+* Advanced analytics
+* Mobile app development
+* Additional integrations
+
+10. RECOMMENDATION SUMMARY
+10.1 Immediate Actions
+1. Finalize Technical Stack: Proceed with Rise crm as primary platform
+2. Design Database Schema: Create detailed database structure
+3. Prototype Development: Build core workflow prototype
+4. User Interface Design: Create mockups for key screens
+10.2 Success Metrics (Revised)
+* Order Processing Time: 60% reduction in manual processing
+* Customer Satisfaction: 90% approval rating on design workflow
+* Staff Efficiency: 40% improvement in task completion time
+* Error Reduction: 70% fewer design revision cycles
+* Revenue Growth: 35% increase in order throughput
+This refined analysis provides a clearer roadmap for development while addressing the specific constraints and requirements of the printing business. The focus on Rise crm as the central platform simplifies the technical architecture while maintaining comprehensive functionality.
+Product Requirement Document: All-in-One Printing Business Management System
+Document Version: 1.1
+Updated Date: July 9, 2025
+Author: Product Requirement Analysis Officer
+Status: Revised Draft for Review
+
+?? Executive Summary:
+This document captures detailed technical and functional requirements for an integrated, web-based printing solution. The customized approach integrates selective open-source platforms (primarily Rise crm and Bagisto) into a single cohesive system to efficiently handle customer management, order processing, inventory management, design-steered workflows, prices estimation, invoicing, and streamlined administrative processes.
+
+?? Project Vision & Scope:
+Vision:
+To establish an all-in-one digital business hub for Caldron Flex, facilitating efficient and automated management of various printing-related tasks—from initial client collaborations to product delivery and payment collection.
+Scope:
+* In-Scope
+o Order & Workflow automation from initiation to closure.
+o CRM for individual and organizational clients.
+o E-commerce store for standardized products.
+o Inventory and purchasing management.
+o Integrated communication (WhatsApp & email).
+o Secure File Management (TIFF to JPG previews, annotation).
+o Deployment: cPanel platform (simplified stack needed).
+* Out-of-Scope for Initial Version:
+o Online electronic payment gateway.
+o Advanced AR/VR automation.
+o Full accounting and logistics integration.
+
+?? User Roles & Permissions:
+RoleDescriptionPermissionsSystem AdminSystem-wide superuser/maintenance.Full system controlStaff AdminManages projects and tasks, full management access.Create/manage tasks, upload/manage designs, client interactions, payment, full administrative team accessDesign/Helper StaffLimited functionality, configurable permissions.Task claiming from queue, upload design, corrections, assist customerOrganization Admin ClientMain contact at the client's business.Create/approve tasks, manage membersOrganization Member ClientLimited permissions based on admin setup.Submit tasks, feedback without final approvalIndividual ClientIndividual registered users.Own orders and project managementTemporary GuestNon-registered, minimal info.Submit order with minimal details
+?? System Architecture & Integration:
+?? Finalized Technology Stack:
+* Core ERP & System Brain: Rise crm (ERP, CRM, Project management core).
+* E-commerce Frontend: Bagisto integration (store.caldronflex.com.np).
+* Frontend & UI Inspiration: Selective UI practices taken from Rise CRM, Twenty CRM, Krayin CRM; not full integrations.
+* Deployment Environment: cPanel hosting with simplified tech stack (PHP/Laravel/MySQL), separate subdomains for load distribution.
+?? Subdomain Structure:
+* Main ERP Application: app.caldronflex.com.np
+* Store/E-commerce: store.caldronflex.com.np
+* Admin Interface: admin.caldronflex.com.np
+
+?? Core Functional Requirements:
+1. ?? Client & User Management:
+* Client registration/authentication (individual, org, guest)
+* Multi-tier access (organization => member hierarchy)
+* Configurable roles/permissions setup — especially for staff and organizational clients.
+2. ?? Product Information Management (PIM):
+* Flexible and dynamic product catalog management:
+o Product pre-defined variants and prices.
+o Custom pricing for certain products.
+o Bulk discount management & promotional pricing (configurable).
+* Defined Price Matrix (Extract):
+o Flex Banner: Rs.40-150 sqft
+o Certificate: Rs.99-299 piece
+o Stamp: Rs.300-500 each
+o Holding Board/Image IDs: Custom Pricing (consultation-required)
+3. ? Workflow & Task Automation:
+* Order Submission: Client provides details (TIF, JPG, PDF, PSD, SVG, PNG accepted), receives priority based on deadlines.
+* Design: Staff claims from queue, submits design in TIFF/JPG.
+* Review & Correction: Automatic low-res JPG previews, annotation highlighting tool, comment system for corrections request.
+* Approval: Clients digitally approve; workflow auto progresses to production.
+* Production: Auto notification of task completion, manual status updates (Printing ? Ready to Collect).
+* Payment Process: Invoice auto-generation triggered, payment tracking (Cheque/Cash).
+4. ?? File Management & Version Control:
+* TIFF files to JPG auto conversion with watermark secure previews.
+* Efficient file storage strategy with version control: 
+o Initial file stored + highlights/comments for corrections
+o In future(beta), direct integration with Adobe Photoshop.
+5. ?? E-commerce/Storefront Integration (Bagisto):
+* Sync client profiles, inventory status between main ERP and store.
+* Product catalog synchronization, inventory updates in real-time.
+6. ?? Inventory & Purchase Management:
+* Mixed inventory tracking (raw materials finished goods depending on product).
+* Purchase management aligned with suppliers.
+* Low stock notification alerts.
+7. ?? Communication & Notification Module:
+* WhatsApp integration via self-hosted proxy.
+* Email templates for project updates, invoice distribution.
+* Notification & updates client preference setup.
+
+?? Practical Challenges Identified & Recommended Solutions:
+IssuesSolutionsMulti-system Integration ComplexityUsing Rise crm as primary system; avoid integrating multiple full CRMS.cPanel Resource RestrictionsSimplify tech stack(PHP/Laravel); consider future VPS hosting as growth occursLarge File Management & StorageExternal object storage solution integration (AWS S3 alternatives or using cPanel as large file storage only)WhatsApp Reliability IssueUse official WhatsApp API business service or robust proxy
+? Clarified & Confirmed Questions / Client Responses already provided:
+Business Operations:
+* Avg. daily orders: 6/day
+* Design revision limit: 5 revisions/project
+* Peak seasonal volume. (Yes but minor fluctuations)
+* Customer split: 60% Organizations, 30% Individuals, Rest Temp/Guest
+Technical Specifications:
+* Max file size: up to 500 MB
+* Multi-language support: Yes (English/Nepali)
+* Inventory complexity: Selective integration(Flex banners excluded)
+Workflow Insights:
+* Designer assignment: Claims from queue.
+* Detailed hierarchy/approval: Not required internally client-side.
+* Product details/specifications: Configurable by client.
+Integration & Payments:
+* Payment strictly via cheque or cash only (No online integration planned).
+* Self-hosted WhatsApp refers to using proxies (security concern mitigation needed).
+* cPanel hosting (RAM 3GB, ~1.5 TB storage); no Docker support.
+Product Design & Management:
+* Files accepted: JPG, PDF, SVG, PSD, PNG, TIFF
+* Annual price updates (with seasonal promotions possible).
+* No return policy as design approval provided beforehand.
+Financial Features:
+* GST, auto-configurable tax integrations.
+* Partial payments allowed, no installments.
+* Client credit management tracking needed.
+Future Plans:
+* AR/VR feature launch timeline: within 1 year
+* Mobile Application: Future consideration planned.
+
+?? Implementation & Roadmap Plan:
+Phase 1 (Month 1–3): Core System
+* Client/Staff Authentication
+* Workflow automation module prototype
+* Basic product/order handling
+Phase 2 (Month 4–6): Full Feature Deployment
+* Full Product Catalog/PIM
+* Design file previews, conversion
+* Inventory and purchasing integration
+Phase 3 (Month 7–9): Optimization & Scalability
+* Communication module refinement (WhatsApp, email)
+* Advanced version control & file management
+* Robust notification systems
+Phase 4 (Month 10+): Advanced Future Features
+* Implementation AR/VR modeling preview
+* Analytics dashboard
+* Mobile application design/development (future roadmap)
+
+?? Success Metrics to Track Post-Implementation:
+* Reduce per-order processing by 40%
+* Customer satisfaction rate boost (95% approval)
+* Staff productivity increased 30%+
+* Reduction in errors & rework by 50%
+* Approximate revenue growth target: 25% year-over-year
+
+? Conclusion:
+This refined Product Requirement Document provides clarity on client expectations, detailed scope, precise architecture choices, and insightful handling of practical challenges. With confirmed responses, all vital workflow elements, and practical mitigation strategies, the project is aligned for successful implementation, maintaining flexible future scaling.
+
+
+
