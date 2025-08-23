@@ -1,0 +1,543 @@
+task_id: "T-001-DB-FOUNDATION"
+agent: "agent-1-database"
+priority: "critical"
+estimated_hours: 24
+status: "assigned"
+dependencies: []
+created_at: "2025-08-23T16:08:53Z"
+due_date: "2025-08-25T18:00:00Z"
+
+objective: |
+  Create comprehensive multi-tenant database foundation for CFlex platform supporting
+  subdomain-based architecture (clients/staff/admin) with reference to modern ERP patterns
+  from Twenty, ERPNext, Ever-Gauzy, Odoo, NocoBase, and Akaunting.
+
+context:
+  subdomain_architecture: "../../SUBDOMAIN_ARCHITECTURE.md"
+  github_references:
+    - "https://github.com/twentyhq/twenty" # GraphQL-first, multi-workspace
+    - "https://github.com/frappe/erpnext" # DocType system, workflows
+    - "https://github.com/ever-co/ever-gauzy" # Multi-tenant NestJS
+    - "https://github.com/odoo/odoo" # Modular ERP architecture
+    - "https://github.com/nocobase/nocobase" # Plugin-based, dynamic schema
+    - "https://github.com/akaunting/akaunting" # Multi-company Laravel
+  rise_crm_base: "3.9.3 - must not modify core tables"
+  target_subdomains:
+    - "clients.caldronflex.com.np" # Customer interface
+    - "staff.caldronflex.com.np" # Staff operations
+    - "admin.caldronflex.com.np" # System administration
+
+requirements:
+  core_requirements:
+    - Multi-tenant aware schema with subdomain context
+    - UTF8MB4 for bilingual support (English/Nepali)
+    - Audit trails for all critical operations
+    - Soft delete capability where appropriate
+    - Optimized for read-heavy workload (80/20 split)
+    - Support for 30 concurrent users, scalable to 150
+    - Query performance <100ms P95 for standard operations
+  
+  reference_architecture:
+    - Ever-Gauzy multi-tenant patterns
+    - ERPNext DocType and permission framework
+    - Twenty workspace isolation concepts
+    - Odoo modular data structure
+    - NocoBase dynamic schema management
+    - Akaunting multi-company support
+
+sub_tasks:
+  
+  # Sub-task 1: Multi-Tenant Foundation
+  ST-001:
+    title: "Multi-Tenant Infrastructure Setup"
+    estimated_hours: 4
+    description: |
+      Create foundational multi-tenant infrastructure based on Ever-Gauzy and
+      Twenty patterns for workspace/tenant isolation.
+    
+    deliverables:
+      - "artifacts/migrations/001_create_tenant_infrastructure.sql"
+      - "artifacts/migrations/001_rollback_tenant_infrastructure.sql"
+    
+    specific_tables:
+      cflex_tenants:
+        description: "Tenant/subdomain configuration"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "subdomain VARCHAR(50) UNIQUE NOT NULL"
+          - "type ENUM('client', 'staff', 'admin', 'public') NOT NULL"
+          - "name VARCHAR(255) NOT NULL"
+          - "config JSON" # Tenant-specific configuration
+          - "status ENUM('active', 'inactive', 'maintenance') DEFAULT 'active'"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        
+      cflex_user_tenants:
+        description: "User access to specific tenants/subdomains"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "user_id INT NOT NULL" # Foreign key to Rise CRM users
+          - "tenant_id INT NOT NULL"
+          - "roles JSON" # Role per subdomain: {"clients": ["customer"], "staff": ["helper"]}
+          - "permissions JSON" # Specific permissions override
+          - "status ENUM('active', 'inactive', 'pending') DEFAULT 'active'"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (tenant_id) REFERENCES cflex_tenants(id) ON DELETE CASCADE"
+    
+    acceptance_criteria:
+      - "All tenant tables created with proper constraints"
+      - "Indexes on tenant_id and user_id for performance"
+      - "JSON fields validated for structure"
+      - "Migration and rollback scripts tested"
+  
+  # Sub-task 2: Core Entity Management (Based on ERPNext DocType patterns)
+  ST-002:
+    title: "Core Business Entities Schema"
+    estimated_hours: 6
+    description: |
+      Create core business entities following ERPNext DocType patterns and
+      Odoo's modular approach for orders, projects, and workflow management.
+    
+    deliverables:
+      - "artifacts/migrations/002_create_core_entities.sql"
+      - "artifacts/migrations/002_rollback_core_entities.sql"
+    
+    specific_tables:
+      cflex_projects:
+        description: "Project/order groups (similar to ERPNext Project)"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "tenant_id INT NOT NULL"
+          - "project_number VARCHAR(50) NOT NULL"
+          - "name VARCHAR(255) NOT NULL"
+          - "client_id INT NOT NULL" # Foreign key to Rise CRM clients
+          - "client_type ENUM('organization', 'individual', 'guest') NOT NULL"
+          - "status ENUM('draft', 'active', 'on_hold', 'completed', 'cancelled') DEFAULT 'draft'"
+          - "priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium'"
+          - "description TEXT"
+          - "start_date DATE"
+          - "due_date DATE"
+          - "completion_date DATE"
+          - "estimated_total DECIMAL(12,2) DEFAULT 0"
+          - "actual_total DECIMAL(12,2) DEFAULT 0"
+          - "metadata JSON" # Project-specific data
+          - "created_by INT NOT NULL"
+          - "updated_by INT"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "deleted_at TIMESTAMP NULL" # Soft delete
+          - "FOREIGN KEY (tenant_id) REFERENCES cflex_tenants(id)"
+          - "FOREIGN KEY (client_id) REFERENCES clients(id)" # Rise CRM table
+          - "INDEX idx_project_client (client_id, tenant_id)"
+          - "INDEX idx_project_status (status, tenant_id)"
+          - "INDEX idx_project_dates (due_date, status)"
+      
+      cflex_orders:
+        description: "Individual orders within projects"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "tenant_id INT NOT NULL"
+          - "project_id INT NOT NULL"
+          - "order_number VARCHAR(50) NOT NULL"
+          - "title VARCHAR(255) NOT NULL"
+          - "description TEXT"
+          - "product_type VARCHAR(100)" # flex_banner, certificate, etc.
+          - "status ENUM('draft', 'submitted', 'in_queue', 'claimed', 'design_in_progress', 'awaiting_review', 'changes_requested', 'approved', 'in_production', 'ready_for_collection', 'completed', 'cancelled') DEFAULT 'draft'"
+          - "priority ENUM('normal', 'urgent') DEFAULT 'normal'"
+          - "assigned_to INT" # Staff member assigned
+          - "dimensions JSON" # Custom dimensions: {width: 100, height: 50, unit: 'cm'}
+          - "specifications JSON" # Product-specific specs
+          - "estimated_price DECIMAL(10,2)"
+          - "final_price DECIMAL(10,2)"
+          - "revision_count INT DEFAULT 0"
+          - "max_revisions INT DEFAULT 5"
+          - "due_date DATETIME"
+          - "claimed_at TIMESTAMP NULL"
+          - "approved_at TIMESTAMP NULL"
+          - "completed_at TIMESTAMP NULL"
+          - "metadata JSON"
+          - "created_by INT NOT NULL"
+          - "updated_by INT"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "deleted_at TIMESTAMP NULL"
+          - "FOREIGN KEY (tenant_id) REFERENCES cflex_tenants(id)"
+          - "FOREIGN KEY (project_id) REFERENCES cflex_projects(id) ON DELETE CASCADE"
+          - "INDEX idx_order_status (status, tenant_id)"
+          - "INDEX idx_order_assigned (assigned_to, status)"
+          - "INDEX idx_order_priority (priority, due_date)"
+      
+      cflex_order_status_history:
+        description: "Audit trail for order status changes"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "order_id INT NOT NULL"
+          - "from_status VARCHAR(50)"
+          - "to_status VARCHAR(50) NOT NULL"
+          - "changed_by INT NOT NULL"
+          - "change_reason TEXT"
+          - "metadata JSON" # Additional context
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (order_id) REFERENCES cflex_orders(id) ON DELETE CASCADE"
+          - "INDEX idx_status_history_order (order_id, created_at)"
+    
+    acceptance_criteria:
+      - "All core entity tables created with tenant awareness"
+      - "Proper foreign key relationships established"
+      - "Status transitions properly constrained"
+      - "Audit trail captures all status changes"
+      - "Performance indexes on critical query paths"
+  
+  # Sub-task 3: Product Catalog (Based on Odoo product structure)
+  ST-003:
+    title: "Product Catalog and Pricing Schema"
+    estimated_hours: 5
+    description: |
+      Create comprehensive product catalog following Odoo's product.product and
+      product.template patterns with dynamic pricing capabilities.
+    
+    deliverables:
+      - "artifacts/migrations/003_create_product_catalog.sql"
+      - "artifacts/migrations/003_rollback_product_catalog.sql"
+    
+    specific_tables:
+      cflex_product_categories:
+        description: "Product category hierarchy"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "name VARCHAR(255) NOT NULL"
+          - "slug VARCHAR(255) NOT NULL"
+          - "parent_id INT" # Self-referencing for hierarchy
+          - "description TEXT"
+          - "sort_order INT DEFAULT 0"
+          - "is_active BOOLEAN DEFAULT TRUE"
+          - "metadata JSON"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (parent_id) REFERENCES cflex_product_categories(id)"
+          - "INDEX idx_category_parent (parent_id, sort_order)"
+      
+      cflex_products:
+        description: "Product templates (similar to Odoo product.template)"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "category_id INT"
+          - "name VARCHAR(255) NOT NULL"
+          - "slug VARCHAR(255) NOT NULL"
+          - "description TEXT"
+          - "product_type ENUM('flex_banner', 'certificate', 'token_of_love', 'photo_frame', 'stamps', 'metal_medals', 'custom_quote') NOT NULL"
+          - "pricing_type ENUM('fixed', 'area_based', 'custom_quote') NOT NULL"
+          - "base_price DECIMAL(10,2)"
+          - "price_per_unit DECIMAL(10,4)" # For area-based pricing (per sqft)
+          - "unit_type VARCHAR(20)" # sqft, piece, etc.
+          - "has_variants BOOLEAN DEFAULT FALSE"
+          - "requires_design BOOLEAN DEFAULT TRUE"
+          - "max_file_size INT DEFAULT 524288000" # 500MB in bytes
+          - "allowed_file_types JSON" # ['pdf', 'ai', 'psd', 'tiff', 'jpg', 'png']
+          - "dimension_constraints JSON" # Min/max width, height constraints
+          - "processing_time_hours INT DEFAULT 24"
+          - "is_active BOOLEAN DEFAULT TRUE"
+          - "metadata JSON"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "deleted_at TIMESTAMP NULL"
+          - "FOREIGN KEY (category_id) REFERENCES cflex_product_categories(id)"
+          - "INDEX idx_product_type (product_type, is_active)"
+          - "INDEX idx_product_category (category_id, is_active)"
+      
+      cflex_product_variants:
+        description: "Product variants (materials, sizes, finishes)"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "product_id INT NOT NULL"
+          - "name VARCHAR(255) NOT NULL"
+          - "variant_type ENUM('material', 'size', 'finish', 'quality') NOT NULL"
+          - "value VARCHAR(255) NOT NULL" # vinyl, fabric, matte, etc.
+          - "price_modifier DECIMAL(8,4) DEFAULT 1.0000" # Multiplier or fixed amount
+          - "modifier_type ENUM('multiplier', 'fixed_amount') DEFAULT 'multiplier'"
+          - "is_default BOOLEAN DEFAULT FALSE"
+          - "sort_order INT DEFAULT 0"
+          - "is_active BOOLEAN DEFAULT TRUE"
+          - "metadata JSON" # Color codes, descriptions, etc.
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (product_id) REFERENCES cflex_products(id) ON DELETE CASCADE"
+          - "INDEX idx_variant_product (product_id, variant_type)"
+    
+    acceptance_criteria:
+      - "Product hierarchy properly structured"
+      - "Variant system supports complex product configurations"
+      - "Pricing modifiers calculate correctly"
+      - "File constraints properly enforced"
+      - "Category hierarchy navigable"
+  
+  # Sub-task 4: File Management (Based on Ever-Gauzy file handling)
+  ST-004:
+    title: "File Management and Version Control"
+    estimated_hours: 4
+    description: |
+      Create comprehensive file management system based on Ever-Gauzy's file
+      handling patterns with version control and annotation support.
+    
+    deliverables:
+      - "artifacts/migrations/004_create_file_management.sql"
+      - "artifacts/migrations/004_rollback_file_management.sql"
+    
+    specific_tables:
+      cflex_file_uploads:
+        description: "File upload tracking and metadata"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "tenant_id INT NOT NULL"
+          - "order_id INT"
+          - "uploaded_by INT NOT NULL"
+          - "file_type ENUM('design', 'reference', 'preview', 'proof', 'final') NOT NULL"
+          - "original_filename VARCHAR(500) NOT NULL"
+          - "stored_filename VARCHAR(500) NOT NULL"
+          - "file_path VARCHAR(1000) NOT NULL"
+          - "file_size_bytes BIGINT NOT NULL"
+          - "mime_type VARCHAR(100) NOT NULL"
+          - "file_extension VARCHAR(10) NOT NULL"
+          - "checksum_md5 VARCHAR(32)"
+          - "checksum_sha256 VARCHAR(64)"
+          - "storage_tier ENUM('hot', 'warm', 'cold', 'archived') DEFAULT 'hot'"
+          - "storage_location VARCHAR(500)" # VPS, cPanel, cloud, etc.
+          - "virus_scan_status ENUM('pending', 'clean', 'infected', 'failed') DEFAULT 'pending'"
+          - "virus_scan_at TIMESTAMP NULL"
+          - "processing_status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending'"
+          - "processed_at TIMESTAMP NULL"
+          - "metadata JSON" # EXIF, dimensions, etc.
+          - "is_active BOOLEAN DEFAULT TRUE"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "deleted_at TIMESTAMP NULL"
+          - "FOREIGN KEY (tenant_id) REFERENCES cflex_tenants(id)"
+          - "FOREIGN KEY (order_id) REFERENCES cflex_orders(id) ON DELETE CASCADE"
+          - "INDEX idx_file_order (order_id, file_type)"
+          - "INDEX idx_file_storage (storage_tier, created_at)"
+          - "INDEX idx_file_processing (processing_status, created_at)"
+      
+      cflex_file_versions:
+        description: "File version history and relationships"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "parent_file_id INT NOT NULL" # Original file
+          - "file_id INT NOT NULL" # This version
+          - "version_number INT NOT NULL"
+          - "version_type ENUM('original', 'preview', 'watermarked', 'processed', 'revision') NOT NULL"
+          - "created_by INT NOT NULL"
+          - "change_notes TEXT"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (parent_file_id) REFERENCES cflex_file_uploads(id) ON DELETE CASCADE"
+          - "FOREIGN KEY (file_id) REFERENCES cflex_file_uploads(id) ON DELETE CASCADE"
+          - "INDEX idx_version_parent (parent_file_id, version_number)"
+      
+      cflex_design_annotations:
+        description: "Design review annotations and comments"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "file_id INT NOT NULL"
+          - "annotated_by INT NOT NULL"
+          - "annotation_type ENUM('comment', 'markup', 'approval', 'rejection') NOT NULL"
+          - "x_coordinate DECIMAL(8,4)" # Relative position (0-1)
+          - "y_coordinate DECIMAL(8,4)"
+          - "comment TEXT"
+          - "markup_data JSON" # SVG or canvas data for drawings
+          - "parent_annotation_id INT" # For replies/threads
+          - "status ENUM('open', 'resolved', 'acknowledged') DEFAULT 'open'"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (file_id) REFERENCES cflex_file_uploads(id) ON DELETE CASCADE"
+          - "FOREIGN KEY (parent_annotation_id) REFERENCES cflex_design_annotations(id)"
+          - "INDEX idx_annotation_file (file_id, created_at)"
+          - "INDEX idx_annotation_thread (parent_annotation_id)"
+    
+    acceptance_criteria:
+      - "File upload metadata comprehensively captured"
+      - "Version control system functional"
+      - "Annotation system supports threaded discussions"
+      - "Storage tier management implemented"
+      - "Virus scanning status tracked"
+  
+  # Sub-task 5: Task Queue and Workflow (Based on Twenty and Ever-Gauzy)
+  ST-005:
+    title: "Task Queue and Workflow Management"
+    estimated_hours: 3
+    description: |
+      Create task queue and workflow management system based on Twenty's task
+      management and Ever-Gauzy's workflow patterns.
+    
+    deliverables:
+      - "artifacts/migrations/005_create_task_workflow.sql"
+      - "artifacts/migrations/005_rollback_task_workflow.sql"
+    
+    specific_tables:
+      cflex_task_definitions:
+        description: "Task templates and workflow definitions"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "name VARCHAR(255) NOT NULL"
+          - "description TEXT"
+          - "task_type ENUM('design', 'review', 'production', 'quality_check', 'communication') NOT NULL"
+          - "estimated_duration_hours INT DEFAULT 2"
+          - "required_skills JSON" # ['design', 'printing', 'customer_service']
+          - "prerequisite_tasks JSON" # Task IDs that must complete first
+          - "auto_assign_rules JSON" # Rules for automatic assignment
+          - "is_active BOOLEAN DEFAULT TRUE"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+      
+      cflex_tasks:
+        description: "Individual task instances"
+        columns:
+          - "id INT AUTO_INCREMENT PRIMARY KEY"
+          - "tenant_id INT NOT NULL"
+          - "order_id INT NOT NULL"
+          - "task_definition_id INT NOT NULL"
+          - "title VARCHAR(255) NOT NULL"
+          - "description TEXT"
+          - "status ENUM('pending', 'ready', 'claimed', 'in_progress', 'review', 'completed', 'blocked', 'cancelled') DEFAULT 'pending'"
+          - "priority ENUM('low', 'normal', 'high', 'urgent') DEFAULT 'normal'"
+          - "assigned_to INT" # Staff member
+          - "assigned_at TIMESTAMP NULL"
+          - "started_at TIMESTAMP NULL"
+          - "completed_at TIMESTAMP NULL"
+          - "due_date DATETIME"
+          - "estimated_hours INT"
+          - "actual_hours DECIMAL(5,2)"
+          - "blocked_reason TEXT"
+          - "completion_notes TEXT"
+          - "metadata JSON"
+          - "created_by INT NOT NULL"
+          - "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+          - "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+          - "FOREIGN KEY (tenant_id) REFERENCES cflex_tenants(id)"
+          - "FOREIGN KEY (order_id) REFERENCES cflex_orders(id) ON DELETE CASCADE"
+          - "FOREIGN KEY (task_definition_id) REFERENCES cflex_task_definitions(id)"
+          - "INDEX idx_task_status (status, priority, due_date)"
+          - "INDEX idx_task_assigned (assigned_to, status)"
+          - "INDEX idx_task_order (order_id, status)"
+    
+    acceptance_criteria:
+      - "Task queue supports priority-based ordering"
+      - "Workflow definitions reusable across orders"
+      - "Task assignment rules configurable"
+      - "Time tracking integrated"
+      - "Blocking dependencies handled"
+  
+  # Sub-task 6: Performance Optimization and Indexing
+  ST-006:
+    title: "Performance Optimization and Index Strategy"
+    estimated_hours: 2
+    description: |
+      Optimize database performance with comprehensive indexing strategy
+      based on expected query patterns and load testing requirements.
+    
+    deliverables:
+      - "artifacts/migrations/006_create_performance_indexes.sql"
+      - "artifacts/migrations/006_rollback_performance_indexes.sql"
+      - "artifacts/performance/query_optimization_plan.md"
+      - "artifacts/performance/index_usage_analysis.sql"
+    
+    optimization_tasks:
+      - "Create composite indexes for multi-column queries"
+      - "Optimize foreign key indexes for JOIN operations"
+      - "Create partial indexes for filtered queries"
+      - "Set up query performance monitoring views"
+      - "Implement table partitioning strategy if needed"
+    
+    critical_indexes:
+      - "Tenant-aware queries: (tenant_id, status, created_at)"
+      - "Staff task queries: (assigned_to, status, due_date)"
+      - "Client order queries: (client_id, status, updated_at)"
+      - "File processing: (processing_status, storage_tier)"
+      - "Audit trails: (order_id, created_at)"
+    
+    acceptance_criteria:
+      - "All critical query patterns under 100ms P95"
+      - "Index usage analysis shows >90% utilization"
+      - "Query execution plans optimized"
+      - "Performance monitoring views created"
+
+overall_deliverables:
+  migrations:
+    - "artifacts/migrations/001_create_tenant_infrastructure.sql"
+    - "artifacts/migrations/002_create_core_entities.sql"
+    - "artifacts/migrations/003_create_product_catalog.sql"
+    - "artifacts/migrations/004_create_file_management.sql"
+    - "artifacts/migrations/005_create_task_workflow.sql"
+    - "artifacts/migrations/006_create_performance_indexes.sql"
+    - "artifacts/rollback/001-006_rollback_all.sql" # Master rollback
+  
+  documentation:
+    - "artifacts/docs/schema_design_comprehensive.md"
+    - "artifacts/docs/cflex_multi_tenant_erd.png"
+    - "artifacts/docs/data_dictionary_complete.md"
+    - "artifacts/docs/tenant_isolation_strategy.md"
+    - "artifacts/docs/performance_optimization_report.md"
+  
+  testing:
+    - "artifacts/tests/migration_test_suite.sql"
+    - "artifacts/tests/performance_benchmarks.json"
+    - "artifacts/tests/tenant_isolation_tests.sql"
+    - "artifacts/tests/data_integrity_tests.sql"
+  
+  reference_analysis:
+    - "artifacts/analysis/github_projects_comparison.md"
+    - "artifacts/analysis/architecture_decisions_log.md"
+    - "artifacts/analysis/rise_crm_integration_points.md"
+
+success_metrics:
+  technical:
+    - "Migration success rate: 100%"
+    - "Query performance: <100ms P95 for standard operations"
+    - "Foreign key integrity: 100%"
+    - "Tenant isolation: verified across all tables"
+    - "Rollback capability: tested and verified"
+    - "Index usage: >90% for critical queries"
+  
+  business:
+    - "Support for 30 concurrent users validated"
+    - "Multi-subdomain access patterns working"
+    - "File handling up to 500MB supported"
+    - "Audit trail completeness: 100%"
+    - "Workflow automation ready"
+
+quality_gates:
+  - "All foreign key relationships validated"
+  - "No orphaned records possible"
+  - "Tenant data isolation enforced"
+  - "Performance benchmarks met"
+  - "Security best practices implemented"
+  - "Documentation comprehensive and accurate"
+  - "All tests passing"
+
+next_tasks_enabled:
+  - "T-002-API-FOUNDATION" # Agent-2 can start API development
+  - "T-003-FILE-PROCESSOR" # Agent-3 can build file processing
+  - "T-006-MONITORING-SETUP" # Agent-6 can set up database monitoring
+  - "T-007-TEST-FRAMEWORK" # Agent-7 can create database tests
+
+notes: |
+  This comprehensive database foundation incorporates best practices from:
+  - Twenty: Multi-workspace isolation and GraphQL-ready schema
+  - ERPNext: DocType patterns and workflow automation
+  - Ever-Gauzy: Multi-tenant architecture and file management
+  - Odoo: Modular design and comprehensive business logic
+  - NocoBase: Dynamic schema and permission system
+  - Akaunting: Multi-company/tenant support patterns
+  
+  Focus areas:
+  1. Multi-tenant subdomain architecture (clients/staff/admin)
+  2. Comprehensive audit trails and soft deletes
+  3. Performance optimization for 30+ concurrent users
+  4. File management with version control and annotations
+  5. Task queue and workflow automation foundation
+  6. Rise CRM integration without core modifications
+  
+  Critical integration points:
+  - All tables include tenant_id for proper isolation
+  - Foreign keys to Rise CRM tables (users, clients) maintained
+  - JSON fields for flexible metadata and configuration
+  - Proper indexing for subdomain-specific queries
+  - Audit trails for compliance and debugging

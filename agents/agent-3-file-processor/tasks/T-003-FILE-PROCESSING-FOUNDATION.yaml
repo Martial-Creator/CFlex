@@ -1,0 +1,615 @@
+task_id: "T-003-FILE-PROCESSING-FOUNDATION"
+agent: "agent-3-file-processor"
+priority: "high"
+estimated_hours: 28
+status: "ready"
+dependencies: []
+created_at: "2025-08-23T16:08:53Z"
+due_date: "2025-08-27T18:00:00Z"
+
+objective: |
+  Create comprehensive file processing and storage management system for CFlex platform
+  supporting large file uploads (500MB), multi-tier storage (VPS/cPanel), format conversions,
+  and design annotation workflow with patterns from Ever-Gauzy, Twenty, and modern file systems.
+
+context:
+  subdomain_architecture: "../../SUBDOMAIN_ARCHITECTURE.md"
+  github_references:
+    - "https://github.com/ever-co/ever-gauzy" # File management patterns
+    - "https://github.com/twentyhq/twenty" # File storage architecture
+    - "https://github.com/minio/minio" # Object storage patterns
+    - "https://github.com/lovell/sharp" # Image processing library
+    - "https://github.com/ImageMagick/ImageMagick" # Fallback processing
+    - "https://github.com/transloadit/uppy" # File upload client patterns
+  storage_infrastructure:
+    hot_storage: "VPS NVMe 100GB (fast access)"
+    cold_storage: "cPanel SFTP 1.5TB (archival)"
+    processing_memory: "Up to 1GB per file operation"
+  supported_formats:
+    input: ["TIFF", "PSD", "JPG", "PNG", "PDF", "SVG", "AI"]
+    output: ["JPG", "PNG", "PDF", "WebP"]
+    max_size: "500MB per file"
+
+requirements:
+  core_requirements:
+    - Multi-tenant file isolation per subdomain
+    - Resumable uploads for large files (500MB)
+    - TIFF/PSD to JPG conversion with watermarks
+    - Automated storage tiering (hot → warm → cold)
+    - Virus scanning integration (ClamAV)
+    - File version control and annotation support
+    - Preview generation for web display
+    - Metadata extraction and indexing
+    - Processing queue with priority handling
+    - Performance target: 90% of <50MB files in <60s
+  
+  reference_architecture:
+    - Ever-Gauzy file management and processing patterns
+    - Twenty file storage and organization strategies
+    - MinIO object storage concepts for tiering
+    - Sharp.js high-performance image processing
+    - Uppy resumable upload patterns
+
+sub_tasks:
+
+  # Sub-task 1: File Upload and Intake System
+  ST-001:
+    title: "Resumable File Upload and Intake System"
+    estimated_hours: 6
+    description: |
+      Create robust file upload system supporting resumable uploads for large files
+      with multi-tenant isolation and security validation.
+    
+    deliverables:
+      - "artifacts/upload/upload_handler.js"
+      - "artifacts/upload/chunk_manager.js"
+      - "artifacts/upload/upload_validator.js"
+      - "artifacts/upload/virus_scanner.js"
+      - "artifacts/config/upload_config.js"
+    
+    upload_system_architecture:
+      resumable_upload:
+        description: "Chunked upload system for large files"
+        implementation: |
+          class ResumableUploadHandler {
+            constructor() {
+              this.chunkSize = 5 * 1024 * 1024; // 5MB chunks
+              this.tempDir = '/tmp/uploads';
+              this.maxConcurrentChunks = 3;
+            }
+            
+            async handleChunk(fileId, chunkIndex, chunkData, totalChunks) {
+              // Validate chunk integrity
+              // Store chunk temporarily
+              // Track upload progress
+              // Merge chunks when complete
+              return { success: true, progress: (chunkIndex + 1) / totalChunks };
+            }
+            
+            async assembleFile(fileId, metadata) {
+              // Merge all chunks
+              // Validate file integrity
+              // Move to processing queue
+              // Clean up temporary chunks
+            }
+          }
+      
+      file_validation:
+        security_checks:
+          - "File type validation against whitelist"
+          - "File size limits per tenant/user role"
+          - "Magic number verification (not just extension)"
+          - "ClamAV virus scanning"
+          - "Malicious script detection in uploads"
+        
+        validation_pipeline: |
+          1. Basic validation (size, type, name)
+          2. Magic number verification
+          3. Virus scanning (async)
+          4. Content inspection for embedded threats
+          5. Tenant quota validation
+          6. Queue for processing
+      
+      multi_tenant_isolation:
+        - "Files stored with tenant-specific prefixes"
+        - "Access controls enforced at storage layer"
+        - "Quota management per tenant"
+        - "Processing priority per tenant type"
+    
+    acceptance_criteria:
+      - "500MB file uploads working reliably"
+      - "Resume capability after network interruption"
+      - "Virus scanning blocks infected files"
+      - "Multi-tenant file isolation enforced"
+      - "Upload progress tracking accurate"
+      - "Error handling comprehensive"
+
+  # Sub-task 2: Image Processing and Conversion Engine
+  ST-002:
+    title: "High-Performance Image Processing Engine"
+    estimated_hours: 8
+    description: |
+      Create image processing engine using Sharp.js with ImageMagick fallback
+      for format conversions, watermarking, and optimization.
+    
+    deliverables:
+      - "artifacts/processing/image_processor.js"
+      - "artifacts/processing/conversion_engine.js"
+      - "artifacts/processing/watermark_service.js"
+      - "artifacts/processing/metadata_extractor.js"
+      - "artifacts/processing/fallback_processor.js"
+    
+    processing_capabilities:
+      primary_engine_sharp:
+        formats_supported:
+          input: ["JPEG", "PNG", "WebP", "AVIF", "TIFF", "SVG"]
+          output: ["JPEG", "PNG", "WebP", "AVIF"]
+        
+        operations:
+          - "Format conversion with quality control"
+          - "Resizing with aspect ratio preservation"
+          - "Watermark overlay with positioning"
+          - "Color space conversion (RGB/CMYK)"
+          - "Compression optimization"
+        
+        performance_optimizations:
+          - "Stream-based processing for memory efficiency"
+          - "Multi-core utilization"
+          - "Progressive JPEG generation"
+          - "Adaptive quality based on content analysis"
+      
+      fallback_engine_imagemagick:
+        formats_supported:
+          input: ["PSD", "AI", "EPS", "PDF", "TIFF", "RAW"]
+          output: ["JPEG", "PNG", "PDF"]
+        
+        specialized_operations:
+          - "PSD layer flattening and extraction"
+          - "PDF to image conversion"
+          - "Vector format rasterization"
+          - "Color profile management"
+        
+        implementation: |
+          class ImageMagickFallback {
+            async processPSD(inputPath, outputPath, options) {
+              const command = `magick "${inputPath}[0]" -flatten ` +
+                            `-quality ${options.quality || 85} ` +
+                            `-resize ${options.maxWidth || 1920}x${options.maxHeight || 1080}> ` +
+                            `"${outputPath}"`;
+              
+              return this.executeCommand(command);
+            }
+            
+            async convertPDFToImages(pdfPath, outputDir, dpi = 300) {
+              const command = `magick -density ${dpi} "${pdfPath}" ` +
+                            `-quality 90 "${outputDir}/page_%03d.jpg"`;
+              
+              return this.executeCommand(command);
+            }
+          }
+      
+      watermarking_system:
+        watermark_types:
+          - "Logo overlay with transparency"
+          - "Text watermark with custom fonts"
+          - "Pattern watermark for backgrounds"
+          - "Copyright notice positioning"
+        
+        positioning_options:
+          - "Corner placement (NE, NW, SE, SW)"
+          - "Center overlay"
+          - "Repeating pattern"
+          - "Custom coordinate positioning"
+        
+        implementation: |
+          class WatermarkService {
+            async applyWatermark(imagePath, watermarkConfig) {
+              const { type, position, opacity, size } = watermarkConfig;
+              
+              if (type === 'logo') {
+                return this.applyLogoWatermark(imagePath, position, opacity, size);
+              } else if (type === 'text') {
+                return this.applyTextWatermark(imagePath, watermarkConfig);
+              }
+            }
+            
+            async generatePreviewWatermark(imagePath, outputPath) {
+              // Apply subtle watermark for client previews
+              // Maintain image quality for review
+              // Include "PROOF" or "PREVIEW" text
+            }
+          }
+    
+    acceptance_criteria:
+      - "TIFF/PSD conversion working reliably"
+      - "Watermarks applied correctly"
+      - "Processing time <60s for 90% of files <50MB"
+      - "Memory usage <1GB per operation"
+      - "Quality preservation meets standards"
+      - "Batch processing capability functional"
+
+  # Sub-task 3: Storage Tier Management System
+  ST-003:
+    title: "Multi-Tier Storage Management"
+    estimated_hours: 6
+    description: |
+      Create intelligent storage management system with automated tiering
+      between VPS (hot), and cPanel SFTP (cold) storage.
+    
+    deliverables:
+      - "artifacts/storage/storage_manager.js"
+      - "artifacts/storage/tier_manager.js"
+      - "artifacts/storage/sftp_client.js"
+      - "artifacts/storage/cache_manager.js"
+      - "artifacts/storage/cleanup_service.js"
+    
+    storage_architecture:
+      tier_strategy:
+        hot_storage:
+          location: "VPS NVMe storage"
+          purpose: "Active files, recent uploads, processing queue"
+          capacity: "100GB total"
+          retention: "Files accessed within 7 days"
+          performance: "<10ms access time"
+        
+        cold_storage:
+          location: "cPanel SFTP"
+          purpose: "Completed projects, archived files"
+          capacity: "1.5TB total"
+          retention: "Permanent storage"
+          performance: "2-10s access time"
+        
+        intelligent_tiering:
+          triggers:
+            - "File age > 30 days without access"
+            - "Order status = 'completed' + 7 days"
+            - "Hot storage > 80% capacity"
+            - "Manual admin request"
+          
+          process: |
+            1. Identify files for migration
+            2. Verify file integrity before move
+            3. Copy to cold storage via SFTP
+            4. Verify successful transfer
+            5. Update database location reference
+            6. Delete from hot storage
+            7. Generate access proxy for future requests
+      
+      sftp_integration:
+        connection_management:
+          - "Connection pooling for efficiency"
+          - "Automatic retry with exponential backoff"
+          - "Health monitoring and failover"
+          - "Concurrent transfer limits"
+        
+        implementation: |
+          class SFTPStorageClient {
+            constructor() {
+              this.connectionPool = new SFTPPool({
+                host: process.env.CPANEL_SFTP_HOST,
+                username: process.env.CPANEL_SFTP_USER,
+                privateKey: process.env.CPANEL_SFTP_KEY,
+                maxConnections: 5
+              });
+            }
+            
+            async uploadFile(localPath, remotePath, metadata) {
+              const sftp = await this.connectionPool.acquire();
+              try {
+                await sftp.put(localPath, remotePath);
+                await this.verifyUpload(sftp, localPath, remotePath);
+                return { success: true, remotePath, metadata };
+              } finally {
+                this.connectionPool.release(sftp);
+              }
+            }
+            
+            async downloadFile(remotePath, localPath) {
+              // Handle cold storage file retrieval
+              // Cache frequently accessed files
+              // Update access timestamps
+            }
+          }
+      
+      cache_management:
+        preview_cache:
+          - "Keep generated previews on hot storage"
+          - "LRU eviction policy"
+          - "Pre-generate previews for active orders"
+          - "Async refresh for expired previews"
+        
+        metadata_cache:
+          - "Redis cache for file metadata"
+          - "Database query optimization"
+          - "Cache invalidation on file updates"
+    
+    acceptance_criteria:
+      - "Automated tiering working correctly"
+      - "SFTP transfers reliable and verified"
+      - "File retrieval from cold storage functional"
+      - "Cache management optimizing performance"
+      - "Storage usage monitoring accurate"
+
+  # Sub-task 4: File Version Control and Annotation System
+  ST-004:
+    title: "File Version Control and Design Annotations"
+    estimated_hours: 5
+    description: |
+      Create comprehensive version control system for design files with
+      annotation support for client-designer collaboration.
+    
+    deliverables:
+      - "artifacts/versioning/version_manager.js"
+      - "artifacts/versioning/annotation_engine.js"
+      - "artifacts/versioning/diff_generator.js"
+      - "artifacts/api/annotation_api.js"
+      - "artifacts/ui/annotation_viewer.js"
+    
+    version_control_system:
+      version_management:
+        version_types:
+          - "original" # Initial upload
+          - "processed" # After conversion/watermarking
+          - "revision" # Client requested changes
+          - "approved" # Final approved version
+          - "archived" # Historical versions
+        
+        version_relationships: |
+          class VersionManager {
+            createVersion(parentFileId, versionType, metadata) {
+              return {
+                id: generateId(),
+                parentId: parentFileId,
+                versionNumber: this.getNextVersionNumber(parentFileId),
+                type: versionType,
+                createdAt: new Date(),
+                createdBy: metadata.userId,
+                changes: metadata.changes,
+                approvalStatus: 'pending'
+              };
+            }
+            
+            getVersionHistory(fileId) {
+              // Return complete version tree
+              // Include change summaries
+              // Show approval status
+            }
+            
+            compareVersions(versionA, versionB) {
+              // Generate visual diff if possible
+              // Highlight changes
+              // Return comparison metadata
+            }
+          }
+      
+      annotation_system:
+        annotation_types:
+          comment: "Text comments on specific areas"
+          markup: "Drawing/highlighting on image"
+          approval: "Approval indicators"
+          rejection: "Rejection with reasons"
+          measurement: "Dimension annotations"
+        
+        annotation_structure: |
+          {
+            "id": "ann_123",
+            "fileId": "file_456",
+            "type": "comment",
+            "position": { "x": 0.25, "y": 0.75 }, // Relative coordinates
+            "content": {
+              "text": "Please adjust color saturation",
+              "markup": "svg_drawing_data",
+              "measurements": { "width": 100, "height": 50, "unit": "mm" }
+            },
+            "author": {
+              "userId": "user_789",
+              "name": "John Doe",
+              "role": "client"
+            },
+            "status": "open", // open, resolved, acknowledged
+            "replies": [/* threaded responses */],
+            "createdAt": "2025-08-23T16:00:00Z"
+          }
+        
+        collaboration_features:
+          - "Real-time annotation updates via WebSocket"
+          - "Threaded discussion on annotations"
+          - "Annotation history and audit trail"
+          - "Role-based annotation permissions"
+          - "Notification triggers for new annotations"
+    
+    acceptance_criteria:
+      - "Version control tracking all file changes"
+      - "Annotation system supporting collaboration"
+      - "Real-time updates working across users"
+      - "Version comparison functional"
+      - "Approval workflow integrated"
+
+  # Sub-task 5: Processing Queue and Workflow Integration
+  ST-005:
+    title: "Processing Queue and Workflow Management"
+    estimated_hours: 3
+    description: |
+      Create processing queue system with priority handling and integration
+      with the main workflow system for automated file processing.
+    
+    deliverables:
+      - "artifacts/queue/processing_queue.js"
+      - "artifacts/queue/job_scheduler.js"
+      - "artifacts/queue/priority_manager.js"
+      - "artifacts/workflow/file_workflow.js"
+      - "artifacts/monitoring/queue_monitor.js"
+    
+    queue_architecture:
+      job_types:
+        - "file_conversion" # Format conversion tasks
+        - "watermark_application" # Apply watermarks
+        - "preview_generation" # Generate web previews
+        - "storage_migration" # Move between storage tiers
+        - "metadata_extraction" # Extract file metadata
+        - "virus_scan" # Security scanning
+      
+      priority_system:
+        priority_levels:
+          urgent: "Rush orders, critical fixes"
+          high: "Standard client orders"
+          normal: "Batch processing, optimizations"
+          low: "Maintenance, cleanup tasks"
+        
+        priority_calculation: |
+          class PriorityManager {
+            calculatePriority(job) {
+              let priority = job.basePriority;
+              
+              // Adjust based on order urgency
+              if (job.order?.isUrgent) priority += 20;
+              
+              // Adjust based on client tier
+              if (job.client?.tier === 'premium') priority += 10;
+              
+              // Adjust based on deadline proximity
+              const daysToDeadline = this.getDaysToDeadline(job.order?.dueDate);
+              if (daysToDeadline <= 1) priority += 15;
+              if (daysToDeadline <= 3) priority += 10;
+              
+              // Adjust based on file size (smaller files first for quick wins)
+              if (job.fileSize < 10 * 1024 * 1024) priority += 5;
+              
+              return Math.min(100, priority); // Cap at 100
+            }
+          }
+      
+      workflow_integration:
+        state_transitions:
+          - "Upload Complete → Queued for Processing"
+          - "Processing Started → In Progress"
+          - "Processing Complete → Ready for Review"
+          - "Review Approved → Ready for Production"
+          - "Storage Migration → Archived"
+        
+        automation_triggers:
+          - "Auto-queue uploaded files for processing"
+          - "Generate previews on conversion complete"
+          - "Notify clients when previews ready"
+          - "Auto-archive completed orders after 30 days"
+    
+    acceptance_criteria:
+      - "Queue processing files in priority order"
+      - "Workflow state transitions working"
+      - "Error handling and retry mechanisms functional"
+      - "Monitoring and metrics collection active"
+      - "Performance meeting SLA targets"
+
+overall_deliverables:
+  core_system:
+    - "artifacts/upload/" # File upload system
+    - "artifacts/processing/" # Image processing engine
+    - "artifacts/storage/" # Storage tier management
+    - "artifacts/versioning/" # Version control system
+    - "artifacts/queue/" # Processing queue
+    - "artifacts/workflow/" # Workflow integration
+    - "artifacts/monitoring/" # Performance monitoring
+  
+  configuration:
+    - "artifacts/config/file_processing_config.js"
+    - "artifacts/config/storage_config.js"
+    - "artifacts/config/watermark_templates.json"
+    - "artifacts/config/processing_rules.json"
+  
+  documentation:
+    - "artifacts/docs/file_processing_architecture.md"
+    - "artifacts/docs/storage_tier_strategy.md"
+    - "artifacts/docs/api_integration_guide.md"
+    - "artifacts/docs/troubleshooting_guide.md"
+  
+  testing:
+    - "artifacts/tests/upload_tests.js"
+    - "artifacts/tests/processing_tests.js"
+    - "artifacts/tests/storage_tests.js"
+    - "artifacts/tests/performance_benchmarks.js"
+
+success_metrics:
+  performance:
+    - "90% of files <50MB processed in <60s"
+    - "Memory usage <1GB per operation"
+    - "Upload success rate >99% for files <500MB"
+    - "Storage tier migration success rate >99.9%"
+    - "Queue processing efficiency >95%"
+  
+  reliability:
+    - "File integrity maintained through all operations"
+    - "Zero data loss during processing or migration"
+    - "Resumable uploads working after interruption"
+    - "Error recovery mechanisms effective"
+    - "Virus scanning catching 100% of known threats"
+  
+  scalability:
+    - "Concurrent processing of 5+ files without degradation"
+    - "Queue handling 100+ jobs without performance loss"
+    - "Storage system scaling to 1.5TB without issues"
+    - "Processing time scaling linearly with file size"
+
+quality_gates:
+  - "All file formats processed correctly"
+  - "Watermarks applied consistently"
+  - "Storage tier migration verified"
+  - "Version control maintaining integrity"
+  - "Annotation system fully functional"
+  - "Security measures preventing malicious uploads"
+  - "Performance benchmarks met under load"
+  - "Integration with APIs working"
+
+integration_points:
+  agent_1_database:
+    - "File metadata storage and retrieval"
+    - "Version control data management"
+    - "Processing status updates"
+  
+  agent_2_backend_api:
+    - "File upload API integration"
+    - "Processing status endpoints"
+    - "Annotation API coordination"
+  
+  agent_5_integration:
+    - "Notification triggers for processing complete"
+    - "Status updates via communication channels"
+  
+  agent_6_monitoring:
+    - "Processing metrics and performance data"
+    - "Queue status and health metrics"
+    - "Storage utilization monitoring"
+
+next_tasks_enabled:
+  - "T-002-API-FOUNDATION" # APIs can integrate file processing
+  - "T-004-UI-FOUNDATION" # Frontend can integrate file viewers
+  - "T-006-MONITORING-SETUP" # Monitoring can track file processing metrics
+
+notes: |
+  This comprehensive file processing foundation incorporates patterns from:
+  - Ever-Gauzy: File management and multi-tenant isolation patterns
+  - Twenty: Storage architecture and version control concepts
+  - MinIO: Object storage and tiering strategies
+  - Sharp.js: High-performance image processing optimizations
+  - Uppy: Resumable upload patterns and client-side handling
+  
+  Key implementation focuses:
+  1. Robust large file upload handling (500MB) with resumption
+  2. High-performance image processing with fallback strategies
+  3. Intelligent storage tiering for cost and performance optimization
+  4. Comprehensive version control for design collaboration
+  5. Priority-based processing queue for workflow integration
+  6. Multi-tenant security and isolation throughout
+  
+  Performance considerations:
+  - Stream-based processing to minimize memory usage
+  - Async operations to prevent blocking
+  - Intelligent caching for frequently accessed files
+  - Connection pooling for SFTP operations
+  - Queue batching for efficiency improvements
+  
+  Security measures:
+  - Comprehensive file validation and virus scanning
+  - Tenant-based access controls at all levels
+  - Secure SFTP connections with key-based auth
+  - Input sanitization and type validation
+  - Regular security updates for processing libraries
